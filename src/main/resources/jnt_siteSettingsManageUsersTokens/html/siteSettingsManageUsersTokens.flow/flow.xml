@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow xmlns="http://www.springframework.org/schema/webflow"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+		http://www.springframework.org/schema/webflow
+		http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
+
+    <var name="flowHandler" class="org.jahia.modules.token.users.UsersFlowHandler"/>
+
+    <on-start>
+        <evaluate expression="flowHandler.initRealm(externalContext.requestMap.renderContext)"/>
+        <evaluate expression="flowHandler.initCriteria()" result="flowScope.searchCriteria"/>
+    </on-start>
+
+    <view-state id="search" model="searchCriteria">
+        <on-render>
+            <evaluate expression="flowHandler.search(searchCriteria)" result="requestScope.users"/>
+        </on-render>
+        <transition on="search" to="search"/>
+        <transition on="editUser" to="editUser" bind="false" validate="false">
+            <evaluate expression="flowHandler.populateUser(requestParameters.selectedUsers)" result="flowScope.userProperties"/>
+            <evaluate expression="flowHandler.retrieveUserTokens(requestParameters.selectedUsers)" result="flowScope.userTokens"/>
+        </transition>
+    </view-state>
+
+    <view-state id="editUser" model="userProperties">
+        <transition on="add" to="search">
+            <evaluate expression="flowHandler.addToken(userProperties, requestParameters.recipient, requestParameters.description, requestParameters.expiration, messageContext)"/>
+        </transition>
+        <transition on="cancel" to="search" bind="false" validate="false"/>
+        <transition on="clear" to="search" bind="false" validate="false">
+            <evaluate expression="flowHandler.clearAllTokens(userProperties, messageContext)"/>
+        </transition>
+    </view-state>
+</flow>

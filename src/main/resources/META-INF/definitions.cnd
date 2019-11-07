@@ -1,0 +1,16 @@
+<jnt = 'http://www.jahia.org/jahia/nt/1.0'>
+<jmix = 'http://www.jahia.org/jahia/mix/1.0'>
+
+[jnt:supportToken] > nt:base, jmix:nodenameInfo, jmix:unversionedBasemetadata, jmix:publication, jmix:observable, jmix:autoPublish
+ - token (string) indexed=no
+ - expiration (long) indexed=no
+ - description (string) indexed=no
+ - recipient (string) indexed=no
+
+[jnt:supportTokenHistory] > nt:base, jmix:nodenameInfo, jmix:unversionedBasemetadata, jmix:publication, jmix:observable, jmix:autoPublish
++ *(jnt:supportToken)
+
+[jmix:supportTokenUser] mixin
++ tokenHistory (jnt:supportTokenHistory)
+
+[jnt:siteSettingsManageUsersTokens] > jnt:content, mix:title, jmix:studioOnly, jmix:siteComponent

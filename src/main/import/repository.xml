@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content xmlns:j="http://www.jahia.org/jahia/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0">
+    <modules jcr:primaryType="jnt:modules">
+        <support-token-authentication-valve j:dependencies="default serverSettings"
+                      j:installedModules="support-token-authentication-valve"
+                      j:modulePriority="0"
+                      j:moduleType="module"
+                      j:title="Support Token Authentication Valve"
+                      jcr:primaryType="jnt:module"> 
+            <portlets jcr:primaryType="jnt:portletFolder"/>
+            <files jcr:primaryType="jnt:folder"/>
+            <contents jcr:primaryType="jnt:contentFolder"/>
+            <templates j:rootTemplatePath="/" jcr:primaryType="jnt:templatesFolder">
+                <files jcr:primaryType="jnt:folder">
+                    <serveradmin jcr:primaryType="jnt:folder">
+                        <manage_users_tokens.png j:height="16"
+                                                 j:width="16"
+                                                 jcr:mixinTypes="jmix:image"
+                                                 jcr:primaryType="jnt:file">
+                            <jcr:content jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
+                        </manage_users_tokens.png>
+                    </serveradmin>
+                </files>
+                <contents jcr:primaryType="jnt:contentFolder"/>
+                <server-settings-base j:view="serverSettings"
+                                      jcr:mixinTypes="jmix:useUILocale"
+                                      jcr:primaryType="jnt:template">
+                    <users-and-roles j:hiddenTemplate="false"
+                                     j:icon="/modules/serverSettings/templates/files/serveradmin/users_x0020_and_x0020_roles/users_and_roles.png"
+                                     j:titleKey="serverSettings.usersAndRoles"
+                                     jcr:mixinTypes="jmix:rbTitle"
+                                     jcr:primaryType="jnt:template">
+                        <manageUsersTokens j:applyOn="jnt:globalSettings"
+                                           j:defaultTemplate="false"
+                                           j:hiddenTemplate="false"
+                                           j:icon="/modules/support-token-authentication-valve/templates/files/serveradmin/manage_users_tokens.png"
+                                           j:requiredPermissionNames="adminUsers"
+                                           j:titleKey="Support token authentication"
+                                           jcr:mixinTypes="jmix:rbTitle"
+                                           jcr:primaryType="jnt:contentTemplate">
+                            <pagecontent jcr:primaryType="jnt:contentList">
+                                <manage-users-tokens jcr:primaryType="jnt:siteSettingsManageUsersTokens"/>
+                            </pagecontent>
+                        </manageUsersTokens>
+                    </users-and-roles>
+                </server-settings-base>
+                <site-settings-base j:view="siteSettings"
+                                    jcr:mixinTypes="jmix:useUILocale"
+                                    jcr:primaryType="jnt:template">
+                    <manageUsersTokens j:applyOn="jnt:virtualsite"
+                                       j:defaultTemplate="false"
+                                       j:hiddenTemplate="false"
+                                       j:icon="/modules/support-token-authentication-valve/templates/files/serveradmin/manage_users_tokens.png"
+                                       j:requiredPermissionNames="siteAdminUsers"
+                                       j:titleKey="Support token authentication"
+                                       jcr:mixinTypes="jmix:rbTitle"
+                                       jcr:primaryType="jnt:contentTemplate">
+                        <pagecontent jcr:primaryType="jnt:contentList">
+                            <manage-users-tokens jcr:primaryType="jnt:siteSettingsManageUsersTokens"/>
+                        </pagecontent>
+                    </manageUsersTokens>
+                </site-settings-base>
+            </templates>   
+        </support-token-authentication-valve>
+    </modules>
+</content>
