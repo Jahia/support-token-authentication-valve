@@ -20,3 +20,4 @@ This way, it's not needed to disclose the real password (when it's known).
   - Click on the button "Add"
 - An email will be sent to the recipient with the token and these information. The same email, but without the token, will be sent to the recipient of the notifications for this Jahia server.
 
+test cla
