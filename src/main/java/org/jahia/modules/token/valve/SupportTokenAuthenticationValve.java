@@ -5,11 +5,13 @@ import java.util.Iterator;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
+import org.jahia.api.usermanager.JahiaUserManagerService;
 import org.jahia.bin.Login;
 import org.jahia.modules.token.SupportTokenConstants;
 import org.jahia.params.valves.AuthValveContext;
-import org.jahia.params.valves.AutoRegisteredBaseAuthValve;
+import org.jahia.params.valves.BaseAuthValve;
 import org.jahia.params.valves.LoginEngineAuthValveImpl;
+import org.jahia.pipelines.Pipeline;
 import org.jahia.pipelines.PipelineException;
 import org.jahia.pipelines.valves.ValveContext;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
@@ -17,13 +19,33 @@ import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.decorator.JCRUserNode;
 import org.jahia.services.pwd.PasswordService;
 import org.jahia.services.usermanager.JahiaUser;
-import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class AuthenticationValve extends AutoRegisteredBaseAuthValve {
+public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationValve.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SupportTokenAuthenticationValve.class);
+    public static final String AUTH_VALVE_ID = "supportTokenAuthValve";
+    private Pipeline authPipeline;
+    private JahiaUserManagerService jahiaUserManagerService;
+
+    public void setAuthPipeline(Pipeline authPipeline) {
+        this.authPipeline = authPipeline;
+    }
+
+    public void setJahiaUserManagerService(JahiaUserManagerService jahiaUserManagerService) {
+        this.jahiaUserManagerService = jahiaUserManagerService;
+    }
+
+    public void start() {
+        setId(SupportTokenAuthenticationValve.AUTH_VALVE_ID);
+        removeValve(authPipeline);
+        addValve(authPipeline, -1, null, "LoginEngineAuthValve");
+    }
+
+    public void stop() {
+        removeValve(authPipeline);
+    }
 
     @Override
     public void invoke(Object context, ValveContext valveContext) throws PipelineException {
@@ -47,8 +69,7 @@ public final class AuthenticationValve extends AutoRegisteredBaseAuthValve {
 
             if ((username != null) && (token != null)) {
                 // Check if the user has site access ( even though it is not a user of this site )
-                final JahiaUserManagerService userManagerService = JahiaUserManagerService.getInstance();
-                user = userManagerService.lookupUser(username, site);
+                user = jahiaUserManagerService.lookupUser(username, site);
                 if (user != null) {
                     if (verifyPassword(user, token)) {
                         if (!user.isAccountLocked()) {

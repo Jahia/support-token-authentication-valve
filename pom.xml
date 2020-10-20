@@ -4,12 +4,12 @@
     <parent>
         <artifactId>jahia-modules</artifactId>
         <groupId>org.jahia.modules</groupId>
-        <version>7.3.1.0</version>
+        <version>8.0.1.0</version>
     </parent>
     <groupId>org.jahia.modules</groupId>
     <artifactId>support-token-authentication-valve</artifactId>
     <name>Support Token Authentication Valve</name>
-    <version>1.0.1-SNAPSHOT</version>    
+    <version>2.0.0-SNAPSHOT</version>    
     <packaging>bundle</packaging>
     <description>This is the custom module (Token Authentication Valve) for running on a Digital Experience Manager server.</description>
 
@@ -21,9 +21,11 @@
     </scm>
 
     <properties>
-        <jahia-module-type>system</jahia-module-type>
-        <jahia-deploy-on-site>all</jahia-deploy-on-site>
         <jahia-depends>default,serverSettings</jahia-depends>
+        <jahia-deploy-on-site>all</jahia-deploy-on-site>
+        <jahia-module-signature>MCwCFDy7pzgZjuFIe4JZntV49GP01uB9AhQoH8yDfiQRWH8Lq5TyLQOgDEykxw==</jahia-module-signature>
+        <jahia-module-type>system</jahia-module-type>
+        <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
     </properties>
     
     <repositories>
@@ -54,7 +56,7 @@
         <dependency>
             <groupId>org.jahia.modules</groupId>
             <artifactId>siteSettings</artifactId>
-            <version>7.2.7</version>
+            <version>8.1.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

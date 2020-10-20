@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
+
+    <reference id="authPipeline" interface="org.jahia.pipelines.Pipeline" filter="(type=authentication)" availability="mandatory"/>
+    <reference id="JahiaUserManagerService" interface="org.jahia.api.usermanager.JahiaUserManagerService" availability="mandatory"/>
+
+    <bean id="supportTokenAuthenticationValve" class="org.jahia.modules.token.valve.SupportTokenAuthenticationValve" init-method="start" destroy-method="stop">
+        <property name="authPipeline" ref="authPipeline"/>
+        <property name="jahiaUserManagerService" ref="JahiaUserManagerService"/>
+    </bean>
+</blueprint>
