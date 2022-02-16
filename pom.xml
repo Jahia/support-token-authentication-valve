@@ -24,8 +24,8 @@
         <jahia-depends>default,serverSettings</jahia-depends>
         <jahia-deploy-on-site>all</jahia-deploy-on-site>
         <jahia-module-signature>MCwCFDy7pzgZjuFIe4JZntV49GP01uB9AhQoH8yDfiQRWH8Lq5TyLQOgDEykxw==</jahia-module-signature>
-        <jahia-module-type>system</jahia-module-type>
         <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
+        <jahia-module-type>system</jahia-module-type>
     </properties>
     
     <repositories>
