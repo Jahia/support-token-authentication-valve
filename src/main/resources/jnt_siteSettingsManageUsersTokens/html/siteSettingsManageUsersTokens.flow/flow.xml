@@ -19,7 +19,7 @@
         <transition on="search" to="search"/>
         <transition on="editUser" to="editUser" bind="false" validate="false">
             <evaluate expression="flowHandler.populateUser(requestParameters.selectedUsers)" result="flowScope.userProperties"/>
-            <evaluate expression="flowHandler.retrieveUserTokens(requestParameters.selectedUsers)" result="flowScope.userTokens"/>
+            <evaluate expression="flowHandler.retrieveUserTokens(userProperties)" result="flowScope.userTokens"/>
         </transition>
     </view-state>
 
