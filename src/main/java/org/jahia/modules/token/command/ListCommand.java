@@ -33,7 +33,7 @@ public class ListCommand implements Action {
         } else {
             userTokens.addAll(SupportTokenUtils.listUserTokens(username, siteKey, JahiaUserManagerService.getInstance()));
         }
-        final StringBuffer results = new StringBuffer();
+        final StringBuilder results = new StringBuilder();
         for (String userToken : userTokens) {
             results.append(userToken).append("\n");
         }

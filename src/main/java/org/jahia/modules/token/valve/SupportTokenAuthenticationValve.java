@@ -110,8 +110,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         try {
             if (user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
                 final JCRNodeIteratorWrapper nodeIterator = user.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
-                for (Iterator iterator = nodeIterator.iterator(); nodeIterator.hasNext();) {
-                    JCRNodeWrapper node = (JCRNodeWrapper) iterator.next();
+                for (Iterator<JCRNodeWrapper> iterator = nodeIterator.iterator(); nodeIterator.hasNext();) {
+                    final JCRNodeWrapper node = iterator.next();
                     if (node.hasProperty(SupportTokenConstants.PROP_TOKEN)) {
                         boolean result = StringUtils.isNotEmpty(token) && PasswordService.getInstance().matches(token, node.getProperty(SupportTokenConstants.PROP_TOKEN).getString());
                         if (result) {

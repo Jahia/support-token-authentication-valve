@@ -63,10 +63,9 @@ public final class UsersFlowHandler implements Serializable {
         if (StringUtils.isNotEmpty(searchTerm) && searchTerm.indexOf('*') == -1) {
             searchTerm += '*';
         }
-        final Set<JCRUserNode> searchResult = PrincipalViewHelper.getSearchResult(searchCriteria.getSearchIn(),
+        return PrincipalViewHelper.getSearchResult(searchCriteria.getSearchIn(),
                 siteKey, searchTerm, searchCriteria.getProperties(), searchCriteria.getStoredOn(),
                 searchCriteria.getProviders(), false);
-        return searchResult;
     }
 
     @Autowired
