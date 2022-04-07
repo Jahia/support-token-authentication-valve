@@ -1,7 +1,5 @@
 package org.jahia.modules.token.command;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.jcr.RepositoryException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.karaf.shell.api.action.Action;
