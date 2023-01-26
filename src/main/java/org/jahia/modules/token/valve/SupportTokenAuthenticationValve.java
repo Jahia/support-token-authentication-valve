@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jahia.api.usermanager.JahiaUserManagerService;
 import org.jahia.bin.Login;
 import org.jahia.modules.token.SupportTokenConstants;
+import org.jahia.osgi.FrameworkService;
 import org.jahia.params.valves.AuthValveContext;
 import org.jahia.params.valves.BaseAuthValve;
 import org.jahia.params.valves.LoginEngineAuthValveImpl;
@@ -21,6 +22,9 @@ import org.jahia.services.pwd.PasswordService;
 import org.jahia.services.usermanager.JahiaUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Map;
+import java.util.HashMap;
+
 
 public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 
@@ -101,6 +105,13 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 
             httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
             authContext.getSessionFactory().setCurrentUser(jahiaUser);
+            //event for JExperience
+			Map<String, Object> m = new HashMap<>();
+            m.put("user", jahiaUser);
+            m.put("authContext", authContext);
+            m.put("source", this);
+			FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);			
+			
         } else {
             valveContext.invokeNext(context);
         }
