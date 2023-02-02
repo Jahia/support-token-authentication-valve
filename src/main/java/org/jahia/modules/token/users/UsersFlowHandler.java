@@ -75,7 +75,7 @@ public final class UsersFlowHandler implements Serializable {
 
     public boolean addToken(final UserProperties userProperties, String recipient, String description, Long expiration, final MessageContext context) throws RepositoryException {
         final String token = SupportTokenUtils.generateRandomToken();
-        final boolean result = SupportTokenUtils.addToken(userProperties.getUsername(), userProperties.getSiteKey(), recipient, description, expiration, token, userManagerService);
+        final boolean result = SupportTokenUtils.addToken(userProperties.getUsername(), siteKey, recipient, description, expiration, token, userManagerService);
         if (result) {
             context.addMessage(new MessageBuilder().info().defaultText(String.format("Token %s successfully added", token)).build());
         }
