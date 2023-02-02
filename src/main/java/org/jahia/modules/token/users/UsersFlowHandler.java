@@ -84,7 +84,7 @@ public final class UsersFlowHandler implements Serializable {
 
     public boolean clearAllTokens(final UserProperties userProperties, final MessageContext context) throws RepositoryException {
         LOGGER.info("Clearing all tokens");
-        final boolean result = SupportTokenUtils.clearAllTokens(userProperties.getUsername(), userProperties.getSiteKey(), userManagerService);
+        final boolean result = SupportTokenUtils.clearAllTokens(userProperties.getUsername(), siteKey, userManagerService);
         if (result) {
             context.addMessage(new MessageBuilder().info().defaultText("All tokens successfully deleted").build());
         }
