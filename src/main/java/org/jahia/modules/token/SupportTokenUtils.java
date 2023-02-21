@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import javax.jcr.RepositoryException;
+
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.jahia.api.Constants;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
@@ -114,14 +116,15 @@ public final class SupportTokenUtils {
                                 + "\n"
                                 + "\tGeneration time\t: %s\n"
                                 + "\tDescription\t: %s\n"
-                                + "\tExpiration (in min)\t: %s"
+                                + "\tExpiration (in min)\t: %s\n"
+                                + "\tExpiration date\t: %s"
                                 + "\n"
                                 + "\n"
                                 + "\n"
                                 + "Regards,";
 
                         mailService.sendMessage(sender, mailService.defaultRecipient(), null, null, subject,
-                                String.format(body, userKey, tokenDate, description, expiration));
+                                String.format(body, userKey, tokenDate, description, expiration, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(tokenDate.getTime() + expiration)));
                     }
                 } catch (RepositoryException ex) {
                     LOGGER.error("Cannot save user properties", ex);
