@@ -16,6 +16,7 @@ import org.jahia.params.valves.LoginEngineAuthValveImpl;
 import org.jahia.pipelines.Pipeline;
 import org.jahia.pipelines.PipelineException;
 import org.jahia.pipelines.valves.ValveContext;
+import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.decorator.JCRUserNode;
@@ -113,7 +114,10 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
             m.put("authContext", authContext);
             m.put("source", this);
 			FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);
-
+            // Add loginEvent to allow JExperience being alerted
+            LoginEngineAuthValveImpl valveImpl = new LoginEngineAuthValveImpl();
+            LoginEngineAuthValveImpl.LoginEvent loginEvent = valveImpl.new LoginEvent(this, jahiaUser, authContext);
+            SpringContextSingleton.getInstance().publishEvent(loginEvent);
         } else {
             valveContext.invokeNext(context);
         }
