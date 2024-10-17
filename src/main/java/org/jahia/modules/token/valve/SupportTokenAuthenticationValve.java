@@ -116,7 +116,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 			FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);			
 			
         } else {
-          
+            valveContext.invokeNext(context);
+        }
     }
 
     private boolean verifyPassword(JCRUserNode user, String token) {
