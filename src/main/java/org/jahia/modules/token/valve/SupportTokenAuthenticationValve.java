@@ -106,17 +106,17 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 
             httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
             authContext.getSessionFactory().setCurrentUser(jahiaUser);
-            httpServletRequest.getSession().setAttribute(Constants.SUPPORT_TOKEN_AUTH, Boolean.TRUE);
+
+            SpringContextSingleton.getInstance().publishEvent(new LoginEvent(this, jahiaUser, authContext));
             //event for JExperience
 			Map<String, Object> m = new HashMap<>();
             m.put("user", jahiaUser);
             m.put("authContext", authContext);
             m.put("source", this);
-			FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);
-
+			FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);			
+			
         } else {
-            valveContext.invokeNext(context);
-        }
+          
     }
 
     private boolean verifyPassword(JCRUserNode user, String token) {
