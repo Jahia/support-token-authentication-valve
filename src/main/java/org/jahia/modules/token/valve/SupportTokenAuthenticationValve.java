@@ -16,6 +16,7 @@ import org.jahia.params.valves.LoginEngineAuthValveImpl;
 import org.jahia.pipelines.Pipeline;
 import org.jahia.pipelines.PipelineException;
 import org.jahia.pipelines.valves.ValveContext;
+import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.decorator.JCRUserNode;
