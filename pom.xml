@@ -1,74 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <artifactId>jahia-modules</artifactId>
-        <groupId>org.jahia.modules</groupId>
-        <version>8.0.1.0</version>
-    </parent>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
     <groupId>org.jahia.modules</groupId>
-    <artifactId>support-token-authentication-valve</artifactId>
-    <name>Support Token Authentication Valve</name>
-    <version>2.0.7-SNAPSHOT</version>    
-    <packaging>bundle</packaging>
-    <description>This is the custom module (Token Authentication Valve) for running on a Digital Experience Manager server.</description>
-
-    <scm>
-        <connection>scm:git:git@github.com:Jahia/support-token-authentication-valve.git</connection>
-        <developerConnection>scm:git:git@github.com:Jahia/support-token-authentication-valve.git</developerConnection>
-        <url>scm:git:git@github.com:Jahia/support-token-authentication-valve.git</url>
-        <tag>HEAD</tag>
-    </scm>
-
-    <properties>
-        <jahia-depends>default,serverSettings</jahia-depends>
-        <jahia-deploy-on-site>all</jahia-deploy-on-site>
-        <jahia-module-signature>MCwCFDy7pzgZjuFIe4JZntV49GP01uB9AhQoH8yDfiQRWH8Lq5TyLQOgDEykxw==</jahia-module-signature>
-        <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
-        <jahia-module-type>system</jahia-module-type>
-    </properties>
-    
-    <repositories>
-        <repository>
-            <id>jahia-public</id>
-            <name>Jahia Public Repository</name>
-            <url>https://devtools.jahia.com/nexus/content/groups/public</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Karaf-Commands>*</Karaf-Commands>
-                        <_dsannotations>*</_dsannotations>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    <dependencies>
-        <dependency>
-            <groupId>org.jahia.modules</groupId>
-            <artifactId>siteSettings</artifactId>
-            <version>8.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.console</artifactId>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+    <artifactId>jahia-modules</artifactId>
+    <version>8.0.1.0</version>
+  </parent>
+  <groupId>org.jahia.modules</groupId>
+  <artifactId>support-token-authentication-valve</artifactId>
+  <version>2.0.7-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+  <name>Support Token Authentication Valve</name>
+  <description>This is the custom module (Token Authentication Valve) for running on a Digital Experience Manager server.</description>
+  <scm>
+    <connection>scm:git:https://github.com/Jahia/support-token-authentication-valve</connection>
+    <developerConnection>scm:git:https://github.com/Jahia/support-token-authentication-valve</developerConnection>
+    <url>scm:git:git@github.com:Jahia/support-token-authentication-valve.git</url>
+  </scm>
+  <properties>
+    <jahia-module-signature>MCwCFDy7pzgZjuFIe4JZntV49GP01uB9AhQoH8yDfiQRWH8Lq5TyLQOgDEykxw==</jahia-module-signature>
+    <require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability>
+    <jahia-module-type>system</jahia-module-type>
+    <jahia-deploy-on-site>all</jahia-deploy-on-site>
+    <jahia-depends>default,serverSettings</jahia-depends>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.jahia.modules</groupId>
+      <artifactId>siteSettings</artifactId>
+      <version>8.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.karaf.shell</groupId>
+      <artifactId>org.apache.karaf.shell.console</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>jahia-public</id>
+      <name>Jahia Public Repository</name>
+      <url>https://devtools.jahia.com/nexus/content/groups/public</url>
+    </repository>
+  </repositories>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Karaf-Commands>*</Karaf-Commands>
+            <_dsannotations>*</_dsannotations>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

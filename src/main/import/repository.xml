@@ -1,66 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <content xmlns:j="http://www.jahia.org/jahia/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0">
-    <modules jcr:primaryType="jnt:modules">
-        <support-token-authentication-valve j:dependencies="default serverSettings"
-                      j:installedModules="support-token-authentication-valve"
-                      j:modulePriority="0"
-                      j:moduleType="module"
-                      j:title="Support Token Authentication Valve"
-                      jcr:primaryType="jnt:module"> 
-            <portlets jcr:primaryType="jnt:portletFolder"/>
-            <files jcr:primaryType="jnt:folder"/>
+   <modules jcr:primaryType="jnt:modules">
+      <support-token-authentication-valve j:dependencies="default serverSettings"
+                                          j:installedModules="support-token-authentication-valve"
+                                          j:modulePriority="0"
+                                          j:moduleType="module"
+                                          j:title="Support Token Authentication Valve"
+                                          jcr:mixinTypes="jmix:hasExternalProviderExtension"
+                                          jcr:primaryType="jnt:module">
+         <sources j:title="Support Token Authentication Valve (2.0.7-SNAPSHOT)"
+                  jcr:mixinTypes="jmix:sourceControl jmix:hasExternalProviderExtension"
+                  jcr:primaryType="jnt:moduleVersionFolder"
+                  scmStatus="modified"
+                  j:staticMountPointProviderKey="module-support-token-authentication-valve-2.0.7-SNAPSHOT">
+            <src jcr:mixinTypes="jmix:sourceControl jmix:hasExternalProviderExtension"
+                 jcr:primaryType="jnt:folder"
+                 scmStatus="modified">
+               <main jcr:mixinTypes="jmix:sourceControl jmix:hasExternalProviderExtension"
+                     jcr:primaryType="jnt:folder"
+                     scmStatus="modified">
+                  <resources jcr:mixinTypes="jmix:sourceControl jmix:hasExternalProviderExtension"
+                             jcr:primaryType="jnt:folder"
+                             scmStatus="modified">
+                     <jnt_siteSettingsManageUsersTokens jcr:mixinTypes="jmix:sourceControl jmix:hasExternalProviderExtension"
+                                                        jcr:primaryType="jnt:nodeTypeFolder"
+                                                        scmStatus="modified">
+                        <html jcr:mixinTypes="jmix:sourceControl jmix:hasExternalProviderExtension"
+                              jcr:primaryType="jnt:templateTypeFolder"
+                              scmStatus="modified">
+                           <siteSettingsManageUsersTokens.flow jcr:mixinTypes="jmix:sourceControl jmix:hasExternalProviderExtension"
+                                                               jcr:primaryType="jnt:folder"
+                                                               scmStatus="modified">
+                              <flow.xml jcr:mixinTypes="jmix:sourceControl"
+                                        jcr:primaryType="jnt:xmlFile"
+                                        scmStatus="modified"
+                                        sourceCode="&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&#xA;&lt;flow xmlns=&#34;http://www.springframework.org/schema/webflow&#34;&#xA;      xmlns:xsi=&#34;http://www.w3.org/2001/XMLSchema-instance&#34;&#xA;      xsi:schemaLocation=&#34;&#xA;  http://www.springframework.org/schema/webflow&#xA;  http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd&#34;&gt;&#xA;&#xA;    &lt;var name=&#34;flowHandler&#34; class=&#34;org.jahia.modules.token.users.UsersFlowHandler&#34;/&gt;&#xA;&#xA;    &lt;on-start&gt;&#xA;        &lt;evaluate expression=&#34;flowHandler.initRealm(externalContext.requestMap.renderContext)&#34;/&gt;&#xA;        &lt;evaluate expression=&#34;flowHandler.initCriteria()&#34; result=&#34;flowScope.searchCriteria&#34;/&gt;&#xA;    &lt;/on-start&gt;&#xA;&#xA;    &lt;view-state id=&#34;search&#34; model=&#34;searchCriteria&#34;&gt;&#xA;        &lt;on-render&gt;&#xA;            &lt;evaluate expression=&#34;flowHandler.search(searchCriteria)&#34; result=&#34;requestScope.users&#34;/&gt;&#xA;        &lt;/on-render&gt;&#xA;        &lt;transition on=&#34;search&#34; to=&#34;search&#34;/&gt;&#xA;        &lt;transition on=&#34;editUser&#34; to=&#34;editUser&#34; bind=&#34;false&#34; validate=&#34;false&#34;&gt;&#xA;            &lt;evaluate expression=&#34;flowHandler.populateUser(requestParameters.selectedUsers)&#34; result=&#34;flowScope.userProperties&#34;/&gt;&#xA;            &lt;evaluate expression=&#34;flowHandler.retrieveUserTokens(userProperties)&#34; result=&#34;flowScope.userTokens&#34;/&gt;&#xA;        &lt;/transition&gt;&#xA;    &lt;/view-state&gt;&#xA;&#xA;    &lt;view-state id=&#34;editUser&#34; model=&#34;userProperties&#34;&gt;&#xA;        &lt;transition on=&#34;add&#34; to=&#34;search&#34;&gt;&#xA;            &lt;evaluate expression=&#34;flowHandler.addToken(userProperties, requestParameters.recipient, requestParameters.description, requestParameters.expiration, messageContext)&#34;/&gt;&#xA;        &lt;/transition&gt;&#xA;        &lt;transition on=&#34;cancel&#34; to=&#34;search&#34; bind=&#34;false&#34; validate=&#34;false&#34;/&gt;&#xA;        &lt;transition on=&#34;clear&#34; to=&#34;search&#34; bind=&#34;false&#34; validate=&#34;false&#34;&gt;&#xA;            &lt;evaluate expression=&#34;flowHandler.clearAllTokens(userProperties, messageContext)&#34;/&gt;&#xA;        &lt;/transition&gt;&#xA;    &lt;/view-state&gt;&#xA;&lt;/flow&gt;&#xA;"/>
+                           </siteSettingsManageUsersTokens.flow>
+                        </html>
+                     </jnt_siteSettingsManageUsersTokens>
+                  </resources>
+               </main>
+            </src>
+         </sources>
+         <portlets jcr:primaryType="jnt:portletFolder"/>
+         <files jcr:primaryType="jnt:folder"/>
+         <contents jcr:primaryType="jnt:contentFolder"/>
+         <templates j:rootTemplatePath="/" jcr:primaryType="jnt:templatesFolder">
+            <files jcr:primaryType="jnt:folder">
+               <serveradmin jcr:primaryType="jnt:folder">
+                  <manage_users_tokens.png j:height="16"
+                                           j:width="16"
+                                           jcr:mixinTypes="jmix:image"
+                                           jcr:primaryType="jnt:file">
+                     <jcr:content jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
+                  </manage_users_tokens.png>
+               </serveradmin>
+            </files>
             <contents jcr:primaryType="jnt:contentFolder"/>
-            <templates j:rootTemplatePath="/" jcr:primaryType="jnt:templatesFolder">
-                <files jcr:primaryType="jnt:folder">
-                    <serveradmin jcr:primaryType="jnt:folder">
-                        <manage_users_tokens.png j:height="16"
-                                                 j:width="16"
-                                                 jcr:mixinTypes="jmix:image"
-                                                 jcr:primaryType="jnt:file">
-                            <jcr:content jcr:mimeType="image/png" jcr:primaryType="jnt:resource"/>
-                        </manage_users_tokens.png>
-                    </serveradmin>
-                </files>
-                <contents jcr:primaryType="jnt:contentFolder"/>
-                <server-settings-base j:view="serverSettings"
-                                      jcr:mixinTypes="jmix:useUILocale"
-                                      jcr:primaryType="jnt:template">
-                    <users-and-roles j:hiddenTemplate="false"
-                                     j:icon="/modules/serverSettings/templates/files/serveradmin/users_x0020_and_x0020_roles/users_and_roles.png"
-                                     j:titleKey="serverSettings.usersAndRoles"
+            <server-settings-base j:view="serverSettings"
+                                  jcr:mixinTypes="jmix:useUILocale"
+                                  jcr:primaryType="jnt:template">
+               <users-and-roles j:hiddenTemplate="false"
+                                j:icon="#/modules/serverSettings/templates/files/serveradmin/users_x0020_and_x0020_roles/users_and_roles.png"
+                                j:titleKey="serverSettings.usersAndRoles"
+                                jcr:mixinTypes="jmix:rbTitle"
+                                jcr:primaryType="jnt:template">
+                  <manageUsersTokens j:applyOn="jnt:globalSettings"
+                                     j:defaultTemplate="false"
+                                     j:hiddenTemplate="false"
+                                     j:icon="#/modules/support-token-authentication-valve/templates/files/serveradmin/manage_users_tokens.png"
+                                     j:requiredPermissionNames="adminUsers"
+                                     j:titleKey="Support token authentication"
                                      jcr:mixinTypes="jmix:rbTitle"
-                                     jcr:primaryType="jnt:template">
-                        <manageUsersTokens j:applyOn="jnt:globalSettings"
-                                           j:defaultTemplate="false"
-                                           j:hiddenTemplate="false"
-                                           j:icon="/modules/support-token-authentication-valve/templates/files/serveradmin/manage_users_tokens.png"
-                                           j:requiredPermissionNames="adminUsers"
-                                           j:titleKey="Support token authentication"
-                                           jcr:mixinTypes="jmix:rbTitle"
-                                           jcr:primaryType="jnt:contentTemplate">
-                            <pagecontent jcr:primaryType="jnt:contentList">
-                                <manage-users-tokens jcr:primaryType="jnt:siteSettingsManageUsersTokens"/>
-                            </pagecontent>
-                        </manageUsersTokens>
-                    </users-and-roles>
-                </server-settings-base>
-                <site-settings-base j:view="siteSettings"
-                                    jcr:mixinTypes="jmix:useUILocale"
-                                    jcr:primaryType="jnt:template">
-                    <manageUsersTokens j:applyOn="jnt:virtualsite"
-                                       j:defaultTemplate="false"
-                                       j:hiddenTemplate="false"
-                                       j:icon="/modules/support-token-authentication-valve/templates/files/serveradmin/manage_users_tokens.png"
-                                       j:requiredPermissionNames="siteAdminUsers"
-                                       j:titleKey="Support token authentication"
-                                       jcr:mixinTypes="jmix:rbTitle"
-                                       jcr:primaryType="jnt:contentTemplate">
-                        <pagecontent jcr:primaryType="jnt:contentList">
-                            <manage-users-tokens jcr:primaryType="jnt:siteSettingsManageUsersTokens"/>
-                        </pagecontent>
-                    </manageUsersTokens>
-                </site-settings-base>
-            </templates>   
-        </support-token-authentication-valve>
-    </modules>
+                                     jcr:primaryType="jnt:contentTemplate">
+                     <pagecontent jcr:primaryType="jnt:contentList">
+                        <manage-users-tokens jcr:primaryType="jnt:siteSettingsManageUsersTokens"/>
+                     </pagecontent>
+                  </manageUsersTokens>
+               </users-and-roles>
+            </server-settings-base>
+            <site-settings-base j:view="siteSettings"
+                                jcr:mixinTypes="jmix:useUILocale"
+                                jcr:primaryType="jnt:template">
+               <manageUsersTokens j:applyOn="jnt:virtualsite"
+                                  j:defaultTemplate="false"
+                                  j:hiddenTemplate="false"
+                                  j:icon="#/modules/support-token-authentication-valve/templates/files/serveradmin/manage_users_tokens.png"
+                                  j:requiredPermissionNames="siteAdminUsers"
+                                  j:titleKey="Support token authentication"
+                                  jcr:mixinTypes="jmix:rbTitle"
+                                  jcr:primaryType="jnt:contentTemplate">
+                  <pagecontent jcr:primaryType="jnt:contentList">
+                     <manage-users-tokens jcr:primaryType="jnt:siteSettingsManageUsersTokens"/>
+                  </pagecontent>
+               </manageUsersTokens>
+            </site-settings-base>
+         </templates>
+      </support-token-authentication-valve>
+   </modules>
 </content>
