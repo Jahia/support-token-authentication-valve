@@ -12,7 +12,7 @@
         <evaluate expression="flowHandler.initCriteria()" result="flowScope.searchCriteria"/>
     </on-start>
 
-    <view-state id="main" model="searchCriteria">
+    <view-state id="search" model="searchCriteria">
         <on-render>
             <evaluate expression="flowHandler.search(searchCriteria)" result="requestScope.users"/>
         </on-render>

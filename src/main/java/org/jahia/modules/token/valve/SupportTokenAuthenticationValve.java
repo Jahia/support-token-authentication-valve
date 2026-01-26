@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.HashMap;
+import org.jahia.params.valves.BaseLoginEvent;
+import org.jahia.params.valves.LoginEngineAuthValveImpl.LoginEvent;
 
 
 public final class SupportTokenAuthenticationValve extends BaseAuthValve {
@@ -107,9 +109,10 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 
             httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
             authContext.getSessionFactory().setCurrentUser(jahiaUser);
-            httpServletRequest.getSession().setAttribute(Constants.SUPPORT_TOKEN_AUTH, Boolean.TRUE);
+
+            SpringContextSingleton.getInstance().publishEvent(new LoginEvent(this, jahiaUser, authContext));
             //event for JExperience
-			Map<String, Object> m = new HashMap<>();
+            final Map<String, Object> m = new HashMap<>();
             m.put("user", jahiaUser);
             m.put("authContext", authContext);
             m.put("source", this);
@@ -162,5 +165,14 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         }
 
         return false;
+    }
+
+    public static class LoginEvent extends BaseLoginEvent {
+
+        private static final long serialVersionUID = 8966163034180381951L;
+
+        public LoginEvent(final Object source, final JahiaUser jahiaUser, final AuthValveContext authValveContext) {
+            super(source, jahiaUser, authValveContext);
+        }
     }
 }
