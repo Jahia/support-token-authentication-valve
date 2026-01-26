@@ -116,8 +116,11 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
             m.put("user", jahiaUser);
             m.put("authContext", authContext);
             m.put("source", this);
-            FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);			
-			
+			FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);
+            // Add loginEvent to allow JExperience being alerted
+            LoginEngineAuthValveImpl valveImpl = new LoginEngineAuthValveImpl();
+            LoginEngineAuthValveImpl.LoginEvent loginEvent = valveImpl.new LoginEvent(this, jahiaUser, authContext);
+            SpringContextSingleton.getInstance().publishEvent(loginEvent);
         } else {
             valveContext.invokeNext(context);
         }
