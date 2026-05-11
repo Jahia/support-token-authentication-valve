@@ -1,1 +1,15 @@
+- karafCommand: "log:log 'START - support-token-authentication-valve provisioning'"
+
+- karafCommand: "log:log 'START - Install support-token-authentication-valve dependencies'"
+- installBundle:
+      - 'mvn:org.jahia.modules/graphql-dxm-provider/LATEST'
+      - 'mvn:org.jahia.modules/serverSettings/LATEST'
+  autoStart: true
+  uninstallPreviousVersion: false
+- karafCommand: "log:log 'END - Install support-token-authentication-valve dependencies'"
+
+- karafCommand: "log:log 'START - Install support-token-authentication-valve'"
 - installAndStartBundle: 'mvn:org.jahia.community/support-token-authentication-valve/SNAPSHOT'
+- karafCommand: "log:log 'END - Install support-token-authentication-valve'"
+
+- karafCommand: "log:log 'END - support-token-authentication-valve provisioning'"

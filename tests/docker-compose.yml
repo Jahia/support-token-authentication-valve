@@ -9,6 +9,7 @@ services:
             - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
             - JAHIA_LICENSE=${JAHIA_LICENSE}
             - JPDA=true
+            - JAVA_OPTS=-Xmx4g
         extra_hosts:
             - jahia:127.0.0.1
         networks:
