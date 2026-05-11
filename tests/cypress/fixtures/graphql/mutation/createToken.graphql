@@ -1,0 +1,3 @@
+mutation SupportTokenCreate($username: String!, $siteKey: String, $recipient: String!, $description: String, $expiration: Long) {
+    supportTokenCreate(username: $username, siteKey: $siteKey, recipient: $recipient, description: $description, expiration: $expiration)
+}

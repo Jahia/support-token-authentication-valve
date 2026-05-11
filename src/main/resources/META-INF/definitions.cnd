@@ -12,5 +12,3 @@
 
 [jmix:supportTokenUser] mixin
 + tokenHistory (jnt:supportTokenHistory)
-
-[jnt:siteSettingsManageUsersTokens] > jnt:content, mix:title, jmix:studioOnly, jmix:siteComponent

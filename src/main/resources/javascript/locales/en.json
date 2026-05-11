@@ -1,3 +1,34 @@
 {
-  "label" : "Support token authentication"
+  "label": {
+    "menu_entry": "Support Token Authentication",
+    "title": "Support Token Management",
+    "description": "Create temporary access tokens for users to allow support access without sharing passwords.",
+    "username": "Username",
+    "usernamePlaceholder": "e.g. root",
+    "siteKey": "Site key (optional)",
+    "siteKeyPlaceholder": "e.g. mySite",
+    "search": "Search",
+    "userNotFound": "User not found.",
+    "noTokens": "No tokens for this user.",
+    "tokensTitle": "Active tokens",
+    "tokenCreatedDate": "Created",
+    "tokenRecipient": "Recipient",
+    "tokenDescription": "Description",
+    "tokenExpiration": "Expiration (min)",
+    "createSection": "Create new token",
+    "recipient": "Recipient email",
+    "recipientPlaceholder": "support@example.com",
+    "descriptionField": "Description",
+    "descriptionPlaceholder": "Access for Jahia Support",
+    "expiration": "Expiration (minutes)",
+    "createToken": "Create Token",
+    "clearAllTokens": "Clear All Tokens",
+    "generatedToken": "Generated token — copy it now, it will not be shown again:",
+    "copyToken": "Copy",
+    "tokenCopied": "Copied!",
+    "createSuccess": "Token created successfully.",
+    "createError": "Failed to create token.",
+    "clearSuccess": "All tokens cleared.",
+    "clearError": "Failed to clear tokens."
+  }
 }

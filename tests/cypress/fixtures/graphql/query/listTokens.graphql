@@ -1,0 +1,8 @@
+query SupportTokenListTokens($username: String!, $siteKey: String) {
+    supportTokenListTokens(username: $username, siteKey: $siteKey) {
+        createdDate
+        recipient
+        expiration
+        description
+    }
+}

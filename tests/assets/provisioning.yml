@@ -1,0 +1,1 @@
+- installAndStartBundle: 'mvn:org.jahia.community/support-token-authentication-valve/SNAPSHOT'
