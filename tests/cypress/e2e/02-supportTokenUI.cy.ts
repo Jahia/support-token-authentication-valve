@@ -100,7 +100,7 @@ describe('Support Token Authentication Valve - Admin UI', () => {
         it('shows success alert and generated token after creation', () => {
             cy.get('#st-recipient').type(TEST_RECIPIENT);
             cy.get('#st-expiration').clear().type('30');
-            cy.get('button').contains('Create Token').click();
+            cy.get('#st-create-token').click();
             cy.get('[class*="st_alert--success"]').should('contain.text', 'created');
             cy.get('[class*="st_tokenBox"]').should('exist');
             cy.get('[class*="st_tokenValue"]').should('not.be.empty');
@@ -108,7 +108,7 @@ describe('Support Token Authentication Valve - Admin UI', () => {
 
         it('adds the new token to the table', () => {
             cy.get('#st-recipient').type(TEST_RECIPIENT);
-            cy.get('button').contains('Create Token').click();
+            cy.get('#st-create-token').click();
             cy.get('[class*="st_table"] tbody tr').should('have.length.greaterThan', 0);
         });
 
@@ -118,15 +118,16 @@ describe('Support Token Authentication Valve - Admin UI', () => {
             cy.get('#st-username').type(TEST_USER);
             cy.get('#st-search').click();
             cy.get('#st-recipient').type(TEST_RECIPIENT);
-            cy.get('button').contains('Create Token').click();
+            cy.get('#st-create-token').click();
             cy.get('[class*="st_table"] tbody tr').first().should('contain.text', TEST_RECIPIENT);
         });
 
         it('sends an email to the recipient after token creation', () => {
+            cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}});
             cy.mailpitDeleteAllEmails();
             cy.get('#st-recipient').type(TEST_RECIPIENT);
             cy.get('#st-expiration').clear().type('30');
-            cy.get('button').contains('Create Token').click();
+            cy.get('#st-create-token').click();
             cy.get('[class*="st_alert--success"]').should('contain.text', 'created');
             cy.get('[class*="st_tokenValue"]').invoke('text').then((token: string) => {
                 cy.mailpitHasEmailsByTo(TEST_RECIPIENT, 0, 50, {timeout: 30000})
@@ -151,18 +152,18 @@ describe('Support Token Authentication Valve - Admin UI', () => {
             cy.get('#st-search').click();
             // Ensure at least one token exists
             cy.get('#st-recipient').type(TEST_RECIPIENT);
-            cy.get('button').contains('Create Token').click();
+            cy.get('#st-create-token').click();
         });
 
         it('removes all tokens and shows success', () => {
-            cy.get('button').contains('Clear All Tokens').click();
+            cy.get('#st-clear-all').click();
             cy.get('[class*="st_alert--success"]').should('contain.text', 'cleared');
             cy.get('[class*="st_emptyMsg"]').should('exist');
         });
 
         it('disables clear button when no tokens exist', () => {
-            cy.get('button').contains('Clear All Tokens').click();
-            cy.get('button').contains('Clear All Tokens').should('be.disabled');
+            cy.get('#st-clear-all').click();
+            cy.get('#st-clear-all').should('be.disabled');
         });
     });
 });

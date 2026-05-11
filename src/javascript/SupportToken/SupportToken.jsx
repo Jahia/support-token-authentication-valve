@@ -282,12 +282,14 @@ export const SupportTokenAdmin = () => {
                         </div>
                         <div className={styles.st_actions}>
                             <Button
+                                id="st-create-token"
                                 label={t('label.createToken')}
                                 variant="primary"
                                 isDisabled={busy}
                                 onClick={handleCreate}
                             />
                             <Button
+                                id="st-clear-all"
                                 label={t('label.clearAllTokens')}
                                 variant="destructive"
                                 isDisabled={busy || !tokens || tokens.length === 0}
