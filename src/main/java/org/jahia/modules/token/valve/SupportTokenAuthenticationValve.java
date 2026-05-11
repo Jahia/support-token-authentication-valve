@@ -8,29 +8,26 @@ import org.apache.commons.lang.StringUtils;
 import org.jahia.api.usermanager.JahiaUserManagerService;
 import org.jahia.bin.Login;
 import org.jahia.modules.token.SupportTokenConstants;
-import org.jahia.osgi.FrameworkService;
+import org.jahia.osgi.BundleUtils;
 import org.jahia.params.valves.AuthValveContext;
 import org.jahia.params.valves.BaseAuthValve;
-import org.jahia.params.valves.BaseLoginEvent;
 import org.jahia.params.valves.LoginEngineAuthValveImpl;
 import org.jahia.pipelines.Pipeline;
 import org.jahia.pipelines.PipelineException;
 import org.jahia.pipelines.valves.Valve;
 import org.jahia.pipelines.valves.ValveContext;
-import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.decorator.JCRUserNode;
 import org.jahia.services.pwd.PasswordService;
-import org.jahia.services.usermanager.JahiaUser;
+import org.jahia.services.security.AuthenticationOptions;
+import org.jahia.services.security.AuthenticationService;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Map;
-import java.util.HashMap;
 
 
 @Component(service = Valve.class, immediate = true)
@@ -106,29 +103,20 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         }
 
         if (ok) {
-
             LOGGER.debug("User {} logged in.", user);
-
-            JahiaUser jahiaUser = user.getJahiaUser();
-
-            if (httpServletRequest.getSession(false) != null) {
-                httpServletRequest.getSession().invalidate();
+            AuthenticationService authenticationService = BundleUtils.getOsgiService(AuthenticationService.class, null);
+            try {
+                authenticationService.authenticate(
+                        user.getPath(),
+                        AuthenticationOptions.Builder.withDefaults().build(),
+                        httpServletRequest,
+                        authContext.getResponse());
+                httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
+            } catch (Exception e) {
+                LOGGER.warn("Post-token authentication failed for user {}", user.getName(), e);
+                httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.BAD_PASSWORD);
+                valveContext.invokeNext(context);
             }
-
-            httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
-            authContext.getSessionFactory().setCurrentUser(jahiaUser);
-
-            SpringContextSingleton.getInstance().publishEvent(new LoginEvent(this, jahiaUser, authContext));
-            //event for JExperience
-            final Map<String, Object> m = new HashMap<>();
-            m.put("user", jahiaUser);
-            m.put("authContext", authContext);
-            m.put("source", this);
-			FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);
-            // Add loginEvent to allow JExperience being alerted
-            LoginEngineAuthValveImpl valveImpl = new LoginEngineAuthValveImpl();
-            LoginEngineAuthValveImpl.LoginEvent loginEvent = valveImpl.new LoginEvent(this, jahiaUser, authContext);
-            SpringContextSingleton.getInstance().publishEvent(loginEvent);
         } else {
             valveContext.invokeNext(context);
         }
@@ -175,12 +163,4 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         return false;
     }
 
-    public static class LoginEvent extends BaseLoginEvent {
-
-        private static final long serialVersionUID = 8966163034180381951L;
-
-        public LoginEvent(final Object source, final JahiaUser jahiaUser, final AuthValveContext authValveContext) {
-            super(source, jahiaUser, authValveContext);
-        }
-    }
 }
