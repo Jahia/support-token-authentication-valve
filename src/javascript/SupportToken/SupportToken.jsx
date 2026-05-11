@@ -159,6 +159,7 @@ export const SupportTokenAdmin = () => {
                     />
                 </div>
                 <Button
+                    id="st-search"
                     label={t('label.search')}
                     variant="primary"
                     isDisabled={searching || !username.trim()}

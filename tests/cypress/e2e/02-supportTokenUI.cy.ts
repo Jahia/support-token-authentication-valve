@@ -19,57 +19,65 @@ describe('Support Token Authentication Valve - Admin UI', () => {
 
     describe('Page structure', () => {
         it('loads the admin page', () => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('[class*="st_container"]').should('exist');
         });
 
         it('shows username and site key inputs', () => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').should('exist');
             cy.get('#st-sitekey').should('exist');
         });
 
         it('shows a disabled search button when username is empty', () => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').clear();
-            cy.get('button').contains('Search').should('be.disabled');
+            cy.get('#st-search').should('be.disabled');
         });
 
         it('enables the search button when username is filled', () => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').type(TEST_USER);
-            cy.get('button').contains('Search').should('not.be.disabled');
+            cy.get('#st-search').should('not.be.disabled');
         });
     });
 
     describe('User search', () => {
         it('shows "user not found" for an unknown username', () => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').type('nonexistent-user-xyz');
-            cy.get('button').contains('Search').click();
+            cy.get('#st-search').click();
             cy.get('[class*="st_alert--error"]').should('contain.text', 'not found');
         });
 
         it('shows token table for a known user', () => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').type(TEST_USER);
-            cy.get('button').contains('Search').click();
+            cy.get('#st-search').click();
             cy.get('[class*="st_table"]').should('exist');
         });
 
         it('shows "no tokens" message when user has no tokens', () => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').type(TEST_USER);
-            cy.get('button').contains('Search').click();
+            cy.get('#st-search').click();
             cy.get('[class*="st_emptyMsg"]').should('exist');
         });
     });
 
     describe('Token creation', () => {
         beforeEach(() => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').type(TEST_USER);
-            cy.get('button').contains('Search').click();
+            cy.get('#st-search').click();
         });
 
         it('shows the create token form after search', () => {
@@ -97,7 +105,7 @@ describe('Support Token Authentication Valve - Admin UI', () => {
             cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}});
             cy.reload();
             cy.get('#st-username').type(TEST_USER);
-            cy.get('button').contains('Search').click();
+            cy.get('#st-search').click();
             cy.get('#st-recipient').type(TEST_RECIPIENT);
             cy.get('button').contains('Create Token').click();
             cy.get('[class*="st_table"] tbody tr').first().should('contain.text', TEST_RECIPIENT);
@@ -106,9 +114,10 @@ describe('Support Token Authentication Valve - Admin UI', () => {
 
     describe('Token clear', () => {
         beforeEach(() => {
+            cy.login();
             cy.visit(ADMIN_URL);
             cy.get('#st-username').type(TEST_USER);
-            cy.get('button').contains('Search').click();
+            cy.get('#st-search').click();
             // Ensure at least one token exists
             cy.get('#st-recipient').type(TEST_RECIPIENT);
             cy.get('button').contains('Create Token').click();
