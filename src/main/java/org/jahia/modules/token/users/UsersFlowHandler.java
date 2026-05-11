@@ -17,7 +17,6 @@ import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.jahia.services.usermanager.SearchCriteria;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.binding.message.MessageBuilder;
 import org.springframework.binding.message.MessageContext;
 
@@ -25,7 +24,6 @@ public final class UsersFlowHandler implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UsersFlowHandler.class);
     private static final long serialVersionUID = -7240178997123886031L;
-    private transient JahiaUserManagerService userManagerService;
     private String siteKey;
 
     public void initRealm(RenderContext renderContext) throws RepositoryException {
@@ -51,7 +49,7 @@ public final class UsersFlowHandler implements Serializable {
 
     public UserProperties populateUser(String selectedUser) {
         final UserProperties userProperties = new UserProperties();
-        final JCRUserNode userNode = userManagerService.lookupUserByPath(selectedUser);
+        final JCRUserNode userNode = JahiaUserManagerService.getInstance().lookupUserByPath(selectedUser);
         if (userNode != null) {
             userProperties.populate(userNode);
         }
@@ -68,14 +66,9 @@ public final class UsersFlowHandler implements Serializable {
                 searchCriteria.getProviders(), false);
     }
 
-    @Autowired
-    public void setUserManagerService(JahiaUserManagerService userManagerService) {
-        this.userManagerService = userManagerService;
-    }
-
     public boolean addToken(final UserProperties userProperties, String recipient, String description, Long expiration, final MessageContext context) throws RepositoryException {
         final String token = SupportTokenUtils.generateRandomToken();
-        final boolean result = SupportTokenUtils.addToken(userProperties.getUsername(), siteKey, recipient, description, expiration, token, userManagerService);
+        final boolean result = SupportTokenUtils.addToken(userProperties.getUsername(), siteKey, recipient, description, expiration, token, JahiaUserManagerService.getInstance());
         if (result) {
             context.addMessage(new MessageBuilder().info().defaultText(String.format("Token %s successfully added", token)).build());
         }
@@ -84,7 +77,7 @@ public final class UsersFlowHandler implements Serializable {
 
     public boolean clearAllTokens(final UserProperties userProperties, final MessageContext context) throws RepositoryException {
         LOGGER.info("Clearing all tokens");
-        final boolean result = SupportTokenUtils.clearAllTokens(userProperties.getUsername(), siteKey, userManagerService);
+        final boolean result = SupportTokenUtils.clearAllTokens(userProperties.getUsername(), siteKey, JahiaUserManagerService.getInstance());
         if (result) {
             context.addMessage(new MessageBuilder().info().defaultText("All tokens successfully deleted").build());
         }
@@ -95,7 +88,7 @@ public final class UsersFlowHandler implements Serializable {
         final String[] split = selectedUsers.split(",");
         final Set<Principal> searchResult = new HashSet<>();
         for (String userPath : split) {
-            final JCRUserNode jahiaUser = userManagerService.lookupUserByPath(userPath);
+            final JCRUserNode jahiaUser = JahiaUserManagerService.getInstance().lookupUserByPath(userPath);
             if (jahiaUser != null) {
                 searchResult.add(jahiaUser.getJahiaUser());
             }
@@ -104,6 +97,6 @@ public final class UsersFlowHandler implements Serializable {
     }
 
     public List<String> retrieveUserTokens(UserProperties userProperties) throws RepositoryException {
-        return SupportTokenUtils.listUserTokens(userProperties.getUsername(), siteKey, userManagerService);
+        return SupportTokenUtils.listUserTokens(userProperties.getUsername(), siteKey, JahiaUserManagerService.getInstance());
     }
 }

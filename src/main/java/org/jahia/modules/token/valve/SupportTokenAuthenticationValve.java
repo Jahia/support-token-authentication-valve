@@ -5,13 +5,13 @@ import java.util.Iterator;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
-import org.jahia.api.usermanager.JahiaUserManagerService;
+import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.jahia.bin.Login;
 import org.jahia.modules.token.SupportTokenConstants;
-import org.jahia.modules.token.api.Constants;
 import org.jahia.osgi.FrameworkService;
 import org.jahia.params.valves.AuthValveContext;
 import org.jahia.params.valves.BaseAuthValve;
+import org.jahia.params.valves.BaseLoginEvent;
 import org.jahia.params.valves.LoginEngineAuthValveImpl;
 import org.jahia.pipelines.Pipeline;
 import org.jahia.pipelines.PipelineException;
@@ -22,37 +22,34 @@ import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.decorator.JCRUserNode;
 import org.jahia.services.pwd.PasswordService;
 import org.jahia.services.usermanager.JahiaUser;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.HashMap;
-import org.jahia.params.valves.BaseLoginEvent;
-import org.jahia.params.valves.LoginEngineAuthValveImpl.LoginEvent;
 
 
+@Component(service = SupportTokenAuthenticationValve.class, immediate = true)
 public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SupportTokenAuthenticationValve.class);
     public static final String AUTH_VALVE_ID = "supportTokenAuthValve";
     private Pipeline authPipeline;
-    private JahiaUserManagerService jahiaUserManagerService;
 
-    public void setAuthPipeline(Pipeline authPipeline) {
-        this.authPipeline = authPipeline;
-    }
-
-    public void setJahiaUserManagerService(JahiaUserManagerService jahiaUserManagerService) {
-        this.jahiaUserManagerService = jahiaUserManagerService;
-    }
-
+    @Activate
     public void start() {
-        setId(SupportTokenAuthenticationValve.AUTH_VALVE_ID);
+        authPipeline = (Pipeline) SpringContextSingleton.getBean("authPipeline");
+        setId(AUTH_VALVE_ID);
         removeValve(authPipeline);
         addValve(authPipeline, -1, null, "LoginEngineAuthValve");
     }
 
+    @Deactivate
     public void stop() {
         removeValve(authPipeline);
+        authPipeline = null;
     }
 
     @Override
@@ -77,7 +74,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
 
             if ((username != null) && (token != null)) {
                 // Check if the user has site access ( even though it is not a user of this site )
-                user = jahiaUserManagerService.lookupUser(username, site);
+                user = JahiaUserManagerService.getInstance().lookupUser(username, site);
                 if (user != null) {
                     if (verifyPassword(user, token)) {
                         if (!user.isAccountLocked()) {
