@@ -3426,6 +3426,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cypress-mailpit@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "cypress-mailpit@npm:1.4.0"
+  checksum: 10/6d8c80ad3548ac4056e899a492a158436780e4676fbf07aab879ad0bc96342db93881b40a5e1590e6f40f8d545ca3a82f22fb6bf48ef74d5b8207911d44376f1
+  languageName: node
+  linkType: hard
+
 "cypress-multi-reporters@npm:^1.6.3":
   version: 1.6.4
   resolution: "cypress-multi-reporters@npm:1.6.4"
@@ -8058,6 +8065,7 @@ __metadata:
     cypress: "npm:15.14.2"
     cypress-file-upload: "npm:^5.0.8"
     cypress-iframe: "npm:^1.0.1"
+    cypress-mailpit: "npm:^1.4.0"
     cypress-multi-reporters: "npm:^1.6.3"
     cypress-terminal-report: "npm:^5.3.7"
     cypress-wait-until: "npm:^3.0.1"

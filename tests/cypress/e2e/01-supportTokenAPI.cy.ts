@@ -156,6 +156,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
 
         it('sends an email to the recipient with the token', () => {
             cy.mailpitDeleteAllEmails();
+            cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}});
             cy.apollo({
                 mutation: createToken,
                 variables: {
