@@ -89,15 +89,16 @@ All operations require `admin` permission (via `@GraphQLRequiresPermission("admi
 - **CSS prefix**: `st_`
 - **i18n namespace**: `support-token-authentication-valve`
 - **GQL file**: `SupportToken/SupportToken.gql.js` — `LIST_TOKENS`, `CREATE_TOKEN`, `CLEAR_ALL_TOKENS`
+- **Button ids**: `st-search`, `st-create-token`, `st-clear-all` (for Cypress test selectors)
 
 ## Cypress Tests
 
 | File | Scope |
 |------|-------|
-| `01-supportTokenAPI.cy.ts` | GraphQL API shape, field types, create/list/clear round-trips |
-| `02-supportTokenUI.cy.ts` | Admin UI page structure, search, token creation, clear flow |
+| `01-supportTokenAPI.cy.ts` | GraphQL API shape, field types, create/list/clear round-trips, email verification |
+| `02-supportTokenUI.cy.ts` | Admin UI page structure, search, token creation, clear flow, email verification |
 
-CSS Module selectors use `[class*="st_..."]` pattern.
+CSS Module selectors use `[class*="st_..."]` pattern. Uses **mailpit** (`cypress-mailpit`) for email verification testing.
 
 ## Build
 
@@ -108,8 +109,9 @@ yarn build:production   # webpack production build
 yarn lint               # ESLint on src/javascript
 ```
 
-- Node: `v22.6.0` | Yarn: `v1.22.21`
+- Node: `v22.6.0` | Yarn: `v4.10.3` (`.yarnrc.yml` with `nodeLinker: node-modules`)
 - Output bundle: `src/main/resources/javascript/apps/support-token-authentication-valve.bundle.js`
+- **Lint config**: `.eslintrc.json` (extends `@jahia`), `babel.config.js` (preset-react + preset-env)
 
 ## Gotchas
 
