@@ -9,7 +9,7 @@
     <groupId>org.jahia.community</groupId>
     <artifactId>support-token-authentication-valve</artifactId>
     <name>Support Token Authentication Valve</name>
-    <version>2.0.8-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <description>Jahia module that manages temporary support tokens for user authentication.</description>
 
