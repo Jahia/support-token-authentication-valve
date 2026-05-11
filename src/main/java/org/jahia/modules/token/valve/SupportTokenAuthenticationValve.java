@@ -1,27 +1,36 @@
 package org.jahia.modules.token.valve;
 
 import java.util.Calendar;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
+import org.jahia.api.Constants;
 import org.jahia.api.usermanager.JahiaUserManagerService;
 import org.jahia.bin.Login;
 import org.jahia.modules.token.SupportTokenConstants;
-import org.jahia.osgi.BundleUtils;
+import org.jahia.osgi.FrameworkService;
 import org.jahia.params.valves.AuthValveContext;
 import org.jahia.params.valves.BaseAuthValve;
+import org.jahia.params.valves.BaseLoginEvent;
 import org.jahia.params.valves.LoginEngineAuthValveImpl;
 import org.jahia.pipelines.Pipeline;
 import org.jahia.pipelines.PipelineException;
 import org.jahia.pipelines.valves.Valve;
 import org.jahia.pipelines.valves.ValveContext;
+import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.decorator.JCRUserNode;
+import org.jahia.services.observation.JahiaEventService;
+import org.jahia.services.preferences.user.UserPreferencesHelper;
 import org.jahia.services.pwd.PasswordService;
-import org.jahia.services.security.AuthenticationOptions;
-import org.jahia.services.security.AuthenticationService;
+import org.jahia.services.usermanager.JahiaUser;
+import org.jahia.settings.SettingsBean;
+import org.jahia.utils.LanguageCodeConverters;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -71,85 +80,137 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         final AuthValveContext authContext = (AuthValveContext) context;
         final HttpServletRequest httpServletRequest = authContext.getRequest();
 
-        JCRUserNode user = null;
-        boolean ok = false;
-
-        if (isLoginRequested(httpServletRequest)) {
-
-            final String username = httpServletRequest.getParameter("username");
-            final String token = httpServletRequest.getParameter("password");
-            final String site = httpServletRequest.getParameter("site");
-
-            if ((username != null) && (token != null)) {
-                // Check if the user has site access ( even though it is not a user of this site )
-                user = userManagerService.lookupUser(username, site);
-                if (user != null) {
-                    if (verifyPassword(user, token)) {
-                        if (!user.isAccountLocked()) {
-                            ok = true;
-                        } else {
-                            LOGGER.warn("Login failed: account for user {} is locked.", user.getName());
-                            httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.ACCOUNT_LOCKED);
-                        }
-                    } else {
-                        LOGGER.warn("Login failed: password verification failed for user {}", user.getName());
-                        httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.BAD_PASSWORD);
-                    }
-                } else if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Login failed. Unknown username {}", username.replaceAll("[\r\n]", ""));
-                    httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.UNKNOWN_USER);
-                }
-            }
-        }
-
-        if (ok) {
-            LOGGER.debug("User {} logged in.", user);
-            AuthenticationService authenticationService = BundleUtils.getOsgiService(AuthenticationService.class, null);
-            try {
-                authenticationService.authenticate(
-                        user.getPath(),
-                        AuthenticationOptions.Builder.withDefaults().build(),
-                        httpServletRequest,
-                        authContext.getResponse());
-                httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
-            } catch (Exception e) {
-                LOGGER.warn("Post-token authentication failed for user {}", user.getName(), e);
-                httpServletRequest.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.BAD_PASSWORD);
-                valveContext.invokeNext(context);
-            }
+        JCRUserNode user = tryAuthenticate(httpServletRequest);
+        
+        if (user != null) {
+            handleSuccessfulLogin(authContext, httpServletRequest, user);
         } else {
             valveContext.invokeNext(context);
         }
     }
+    
+    private JCRUserNode tryAuthenticate(HttpServletRequest request) {
+        if (!isLoginRequested(request)) {
+            return null;
+        }
+
+        final String username = request.getParameter("username");
+        final String token = request.getParameter("password");
+        final String site = request.getParameter("site");
+
+        if (StringUtils.isEmpty(username) || StringUtils.isEmpty(token)) {
+            return null;
+        }
+
+        JCRUserNode user = userManagerService.lookupUser(username, site);
+        if (user == null) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Login failed. Unknown username {}", username.replaceAll("[\r\n]", ""));
+            }
+            request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.UNKNOWN_USER);
+            return null;
+        }
+
+        if (!verifyPassword(user, token)) {
+            LOGGER.warn("Login failed: password verification failed for user {}", user.getName());
+            request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.BAD_PASSWORD);
+            return null;
+        }
+
+        if (user.isAccountLocked()) {
+            LOGGER.warn("Login failed: account for user {} is locked.", user.getName());
+            request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.ACCOUNT_LOCKED);
+            return null;
+        }
+
+        return user;
+    }
+
+    private void handleSuccessfulLogin(AuthValveContext authContext, HttpServletRequest request, JCRUserNode user) {
+        LOGGER.debug("User {} logged in.", user);
+
+        JahiaUser jahiaUser = user.getJahiaUser();
+
+        invalidateExistingSession(request);
+        
+        request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
+        authContext.getSessionFactory().setCurrentUser(jahiaUser);
+
+        setUserLocale(request, user);
+        publishLoginEvents(jahiaUser, authContext);
+    }
+    
+    private void invalidateExistingSession(HttpServletRequest request) {
+        if (request.getSession(false) != null) {
+            request.getSession().invalidate();
+        }
+    }
+    
+    private void setUserLocale(HttpServletRequest request, JCRUserNode user) {
+        Locale preferredLocale = UserPreferencesHelper.getPreferredLocale(user,
+                LanguageCodeConverters.resolveLocaleForGuest(request));
+        request.getSession().setAttribute(Constants.SESSION_UI_LOCALE, preferredLocale);
+        if (SettingsBean.getInstance().isConsiderPreferredLanguageAfterLogin()) {
+            request.getSession().setAttribute(Constants.SESSION_LOCALE, preferredLocale);
+        }
+    }
+    
+    private void publishLoginEvents(JahiaUser jahiaUser, AuthValveContext authContext) {
+        LoginEvent event = new LoginEvent(this, jahiaUser, authContext);
+        SpringContextSingleton.getInstance().publishEvent(event);
+        ((JahiaEventService) SpringContextSingleton.getBean("jahiaEventService")).publishEvent(event);
+
+        Map<String, Object> m = new HashMap<>();
+        m.put("user", jahiaUser);
+        m.put("authContext", authContext);
+        m.put("source", this);
+        FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);
+    }
 
     private boolean verifyPassword(JCRUserNode user, String token) {
         try {
-            if (user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
-                final JCRNodeIteratorWrapper nodeIterator = user.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
-                for (Iterator<JCRNodeWrapper> iterator = nodeIterator.iterator(); nodeIterator.hasNext();) {
-                    final JCRNodeWrapper node = iterator.next();
-                    if (node.hasProperty(SupportTokenConstants.PROP_TOKEN)) {
-                        boolean result = StringUtils.isNotEmpty(token) && PasswordService.getInstance().matches(token, node.getProperty(SupportTokenConstants.PROP_TOKEN).getString());
-                        if (result) {
-                            if (node.hasProperty(SupportTokenConstants.PROP_EXPIRATION)) {
-                                final Calendar currentCalendar = Calendar.getInstance();
-                                final Calendar expiredCalendar = Calendar.getInstance();
-                                expiredCalendar.setTime(node.getCreationDateAsDate());
-                                expiredCalendar.add(Calendar.MINUTE, node.getProperty(SupportTokenConstants.PROP_EXPIRATION).getDecimal().intValue());
-                                if (currentCalendar.after(expiredCalendar)) {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        }
-                    }
+            if (!user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
+                return false;
+            }
+            
+            final JCRNodeIteratorWrapper nodeIterator = user.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
+            while (nodeIterator.hasNext()) {
+                final JCRNodeWrapper node = (JCRNodeWrapper) nodeIterator.next();
+                if (isTokenMatch(node, token) && !isTokenExpired(node)) {
+                    return true;
                 }
             }
         } catch (RepositoryException ex) {
             LOGGER.warn("Unable to read tokens for user: " + user.getName(), ex);
-            return false;
         }
         return false;
+    }
+    
+    private boolean isTokenMatch(JCRNodeWrapper node, String token) throws RepositoryException {
+        if (!node.hasProperty(SupportTokenConstants.PROP_TOKEN)) {
+            return false;
+        }
+        String storedToken = node.getProperty(SupportTokenConstants.PROP_TOKEN).getString();
+        return StringUtils.isNotEmpty(token) && PasswordService.getInstance().matches(token, storedToken);
+    }
+    
+    private boolean isTokenExpired(JCRNodeWrapper node) throws RepositoryException {
+        if (!node.hasProperty(SupportTokenConstants.PROP_EXPIRATION)) {
+            return false;
+        }
+        final Calendar currentCalendar = Calendar.getInstance();
+        final Calendar expiredCalendar = Calendar.getInstance();
+        expiredCalendar.setTime(node.getCreationDateAsDate());
+        expiredCalendar.add(Calendar.MINUTE, node.getProperty(SupportTokenConstants.PROP_EXPIRATION).getDecimal().intValue());
+        return currentCalendar.after(expiredCalendar);
+    }
+
+    public static class LoginEvent extends BaseLoginEvent {
+        private static final long serialVersionUID = 8966163034180381951L;
+
+        public LoginEvent(Object source, JahiaUser jahiaUser, AuthValveContext authValveContext) {
+            super(source, jahiaUser, authValveContext);
+        }
     }
 
     private boolean isLoginRequested(HttpServletRequest request) {
@@ -161,6 +222,27 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         }
 
         return false;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        SupportTokenAuthenticationValve other = (SupportTokenAuthenticationValve) obj;
+        return Objects.equals(authPipeline, other.authPipeline)
+                && Objects.equals(userManagerService, other.userManagerService);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), authPipeline, userManagerService);
     }
 
 }
