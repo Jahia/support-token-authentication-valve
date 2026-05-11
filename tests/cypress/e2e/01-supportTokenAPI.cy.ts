@@ -34,7 +34,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
         it('returns null for an unknown user', () => {
             cy.apollo({query: listTokens, variables: {username: 'nonexistent-user-xyz'}})
                 .its('data.supportTokenListTokens')
-                .should('be.empty');
+                .should('be.null');
         });
 
         it('returns token objects with all required fields after creation', () => {
@@ -77,6 +77,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
 
     describe('supportTokenCreate', () => {
         it('returns a non-empty string token on success', () => {
+            cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}})
             cy.apollo({
                 mutation: createToken,
                 variables: {
@@ -92,6 +93,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
         });
 
         it('returned token is a UUID-format string', () => {
+            cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}})
             cy.apollo({
                 mutation: createToken,
                 variables: {username: TEST_USER, recipient: TEST_RECIPIENT, expiration: 60}

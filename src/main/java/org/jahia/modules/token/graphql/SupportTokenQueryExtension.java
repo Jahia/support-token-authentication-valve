@@ -47,7 +47,7 @@ public class SupportTokenQueryExtension {
             return JCRTemplate.getInstance().doExecuteWithSystemSession(session -> {
                 final JCRUserNode user = JahiaUserManagerService.getInstance().lookupUser(username, siteKey, session);
                 if (user == null) {
-                    return Collections.emptyList();
+                    return null;
                 }
                 final List<GqlSupportTokenInfo> result = new ArrayList<>();
                 if (user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
