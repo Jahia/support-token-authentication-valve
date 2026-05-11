@@ -37,6 +37,7 @@ export const SupportTokenAdmin = () => {
         if (!username.trim()) {
             return;
         }
+
         setActionStatus(null);
         setGeneratedToken(null);
         setUserNotFound(false);
@@ -68,6 +69,7 @@ export const SupportTokenAdmin = () => {
             setRecipientError(t('label.recipient') + ' is required');
             return;
         }
+
         setActionStatus(null);
         setGeneratedToken(null);
         try {
@@ -228,8 +230,8 @@ export const SupportTokenAdmin = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {tokens.map((token, idx) => (
-                                        <tr key={idx}>
+                                    {tokens.map(token => (
+                                        <tr key={token.createdDate}>
                                             <td>{token.createdDate}</td>
                                             <td>{token.recipient}</td>
                                             <td>{token.description}</td>
