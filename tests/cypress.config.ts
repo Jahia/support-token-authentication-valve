@@ -12,6 +12,7 @@ export default defineConfig({
     viewportWidth: 1366,
     viewportHeight: 768,
     watchForFileChanges: false,
+    defaultCommandTimeout: 10000,
     e2e: {
         setupNodeEvents(on, config) {
             on(
