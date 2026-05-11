@@ -3,7 +3,8 @@ import {DocumentNode} from 'graphql';
 describe('Support Token Authentication Valve - Admin UI', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const clearTokens: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/clearTokens.graphql');
-
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const createToken: DocumentNode = require('graphql-tag/loader!../fixtures/graphql/mutation/createToken.graphql');
     const ADMIN_URL = '/jahia/administration/supportTokenAdmin';
     const TEST_USER = 'root';
     const TEST_RECIPIENT = 'support-ui-test@jahia.com';
@@ -57,10 +58,20 @@ describe('Support Token Authentication Valve - Admin UI', () => {
 
         it('shows token table for a known user', () => {
             cy.login();
+            cy.apollo({
+                mutation: createToken,
+                variables: {
+                    username: TEST_USER,
+                    recipient: TEST_RECIPIENT,
+                    description: 'API test token',
+                    expiration: 30
+                }
+            });
             cy.visit(ADMIN_URL);
             cy.get('#st-username').type(TEST_USER);
             cy.get('#st-search').click();
             cy.get('[class*="st_table"]').should('exist');
+            cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}});
         });
 
         it('shows "no tokens" message when user has no tokens', () => {
@@ -109,6 +120,26 @@ describe('Support Token Authentication Valve - Admin UI', () => {
             cy.get('#st-recipient').type(TEST_RECIPIENT);
             cy.get('button').contains('Create Token').click();
             cy.get('[class*="st_table"] tbody tr').first().should('contain.text', TEST_RECIPIENT);
+        });
+
+        it('sends an email to the recipient after token creation', () => {
+            cy.mailpitDeleteAllEmails();
+            cy.get('#st-recipient').type(TEST_RECIPIENT);
+            cy.get('#st-expiration').clear().type('30');
+            cy.get('button').contains('Create Token').click();
+            cy.get('[class*="st_alert--success"]').should('contain.text', 'created');
+            cy.get('[class*="st_tokenValue"]').invoke('text').then((token: string) => {
+                cy.mailpitHasEmailsByTo(TEST_RECIPIENT, 0, 50, {timeout: 30000})
+                    .its('messages.0.ID')
+                    .then((id: string) => cy.mailpitGetMail(id))
+                    .then((mail: {Subject: string; Text: string; HTML: string; To: Array<{Address: string}>}) => {
+                        const toAddresses = mail.To.map((t: {Address: string}) => t.Address);
+                        expect(toAddresses).to.include(TEST_RECIPIENT);
+                        expect(mail.Subject).to.eq('Jahia support token generated');
+                        const body = mail.Text || mail.HTML || '';
+                        expect(body).to.contain(token);
+                    });
+            });
         });
     });
 

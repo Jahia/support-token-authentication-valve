@@ -12,4 +12,5 @@
 - installAndStartBundle: 'mvn:org.jahia.community/support-token-authentication-valve/SNAPSHOT'
 - karafCommand: "log:log 'END - Install support-token-authentication-valve'"
 
+- executeScript: "setup-smtp-server.groovy"
 - karafCommand: "log:log 'END - support-token-authentication-valve provisioning'"

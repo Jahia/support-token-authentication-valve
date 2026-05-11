@@ -153,6 +153,34 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                     expect(token.description).to.eq('expiration check');
                 });
         });
+
+        it('sends an email to the recipient with the token', () => {
+            cy.mailpitDeleteAllEmails();
+            cy.apollo({
+                mutation: createToken,
+                variables: {
+                    username: TEST_USER,
+                    recipient: TEST_RECIPIENT,
+                    description: 'Email test token',
+                    expiration: 60
+                }
+            })
+                .its('data.supportTokenCreate')
+                .should('be.a', 'string')
+                .then((token: string) => {
+                    cy.mailpitHasEmailsByTo(TEST_RECIPIENT, 0, 50, {timeout: 30000})
+                        .its('messages.0.ID')
+                        .then((id: string) => cy.mailpitGetMail(id))
+                        .then((mail: {Subject: string; Text: string; HTML: string; To: Array<{Address: string}>}) => {
+                            const toAddresses = mail.To.map((t: {Address: string}) => t.Address);
+                            expect(toAddresses).to.include(TEST_RECIPIENT);
+                            expect(mail.Subject).to.eq('Jahia support token generated');
+                            const body = mail.Text || mail.HTML || '';
+                            expect(body).to.contain(token);
+                            expect(body).to.contain('Email test token');
+                        });
+                });
+        });
     });
 
     // --- supportTokenClearAll ---

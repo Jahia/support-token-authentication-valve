@@ -10,8 +10,18 @@ services:
             - JAHIA_LICENSE=${JAHIA_LICENSE}
             - JPDA=true
             - JAVA_OPTS=-Xmx4g
+        depends_on:
+            - mailpit
         extra_hosts:
             - jahia:127.0.0.1
+        networks:
+            - stack
+    mailpit:
+        image: 'axllent/mailpit'
+        container_name: mailpit
+        ports:
+            - '1025:1025'
+            - '8025:8025'
         networks:
             - stack
     cypress:
@@ -24,6 +34,7 @@ services:
             - MANIFEST=${MANIFEST}
             - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
             - JAHIA_URL=http://jahia:8080
+            - MAILPIT_URL=http://mailpit:8025
             - NEXUS_USERNAME=${NEXUS_USERNAME}
             - NEXUS_PASSWORD=${NEXUS_PASSWORD}
         networks:

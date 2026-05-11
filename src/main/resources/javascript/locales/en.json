@@ -8,7 +8,7 @@
     "siteKey": "Site key (optional)",
     "siteKeyPlaceholder": "e.g. mySite",
     "search": "Search",
-    "userNotFound": "User not found.",
+    "userNotFound": "User not found",
     "noTokens": "No tokens for this user.",
     "tokensTitle": "Active tokens",
     "tokenCreatedDate": "Created",
