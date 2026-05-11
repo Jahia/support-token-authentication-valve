@@ -1,4 +1,4 @@
-package org.jahia.modules.token.valve;
+package org.jahia.community.token.valve;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jahia.api.Constants;
 import org.jahia.api.usermanager.JahiaUserManagerService;
 import org.jahia.bin.Login;
-import org.jahia.modules.token.SupportTokenConstants;
+import org.jahia.community.token.SupportTokenConstants;
 import org.jahia.osgi.FrameworkService;
 import org.jahia.params.valves.AuthValveContext;
 import org.jahia.params.valves.BaseAuthValve;

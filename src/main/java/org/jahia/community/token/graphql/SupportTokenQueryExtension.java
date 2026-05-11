@@ -1,4 +1,4 @@
-package org.jahia.modules.token.graphql;
+package org.jahia.community.token.graphql;
 
 import graphql.annotations.annotationTypes.GraphQLDescription;
 import graphql.annotations.annotationTypes.GraphQLField;
@@ -7,7 +7,7 @@ import graphql.annotations.annotationTypes.GraphQLTypeExtension;
 import org.jahia.api.Constants;
 import org.jahia.modules.graphql.provider.dxm.DXGraphQLProvider;
 import org.jahia.modules.graphql.provider.dxm.security.GraphQLRequiresPermission;
-import org.jahia.modules.token.SupportTokenConstants;
+import org.jahia.community.token.SupportTokenConstants;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
 import org.jahia.services.content.JCRTemplate;

@@ -1,4 +1,4 @@
-package org.jahia.modules.token;
+package org.jahia.community.token;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

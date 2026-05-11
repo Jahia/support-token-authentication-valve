@@ -1,4 +1,4 @@
-package org.jahia.modules.token.command;
+package org.jahia.community.token.command;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
-import org.jahia.modules.token.SupportTokenUtils;
+import org.jahia.community.token.SupportTokenUtils;
 import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

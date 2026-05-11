@@ -6,7 +6,7 @@ Jahia OSGi module that manages temporary support tokens: a support engineer crea
 
 - **artifactId**: `support-token-authentication-valve` | **version**: `3.0.0-SNAPSHOT`
 - **groupId**: `org.jahia.community`
-- **Java package**: `org.jahia.modules.token`
+- **Java package**: `org.jahia.community.token`
 - **jahia-depends**: `default,graphql-dxm-provider`
 - No Blueprint/Spring — pure OSGi DS
 - Karaf commands: `support-token:create`, `support-token:list`, `support-token:clear`

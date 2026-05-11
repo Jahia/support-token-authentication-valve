@@ -118,7 +118,7 @@
                 <configuration>
                     <instructions>
                         <Karaf-Commands>*</Karaf-Commands>
-                        <_dsannotations>org.jahia.modules.token.*</_dsannotations>
+                        <_dsannotations>org.jahia.community.token.*</_dsannotations>
                     </instructions>
                 </configuration>
             </plugin>

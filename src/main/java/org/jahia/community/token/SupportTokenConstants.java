@@ -1,4 +1,4 @@
-package org.jahia.modules.token;
+package org.jahia.community.token;
 
 public final class SupportTokenConstants {
 
