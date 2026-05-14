@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {useLazyQuery, useMutation} from '@apollo/client';
 import {useTranslation} from 'react-i18next';
 import {Button, Loader, Typography} from '@jahia/moonstone';
@@ -23,6 +23,9 @@ export const SupportTokenAdmin = () => {
     const [generatedToken, setGeneratedToken] = useState(null);
     const [copied, setCopied] = useState(false);
     const [recipientError, setRecipientError] = useState('');
+
+    const recipientRef = useRef(null);
+    const tokenBoxRef = useRef(null);
 
     const [listTokens, {loading: searching, data: tokensData}] = useLazyQuery(LIST_TOKENS, {
         fetchPolicy: 'network-only'
@@ -66,7 +69,8 @@ export const SupportTokenAdmin = () => {
 
     const handleCreate = async () => {
         if (!form.recipient.trim()) {
-            setRecipientError(t('label.recipient') + ' is required');
+            setRecipientError(t('label.recipientRequired'));
+            setTimeout(() => recipientRef.current?.focus(), 50);
             return;
         }
 
@@ -87,6 +91,7 @@ export const SupportTokenAdmin = () => {
                 setGeneratedToken(token);
                 setActionStatus('createSuccess');
                 setForm(DEFAULT_FORM);
+                setTimeout(() => tokenBoxRef.current?.focus(), 50);
                 listTokens({variables: {username: searchedUser, siteKey: siteKey.trim() || null}});
             } else {
                 setActionStatus('createError');
@@ -127,6 +132,17 @@ export const SupportTokenAdmin = () => {
 
     const busy = creating || clearing;
 
+    // Derived live region content
+    const srPoliteMsg = actionStatus === 'createSuccess' ? t('label.createSuccess') :
+        actionStatus === 'clearSuccess' ? t('label.clearSuccess') :
+        searching ? t('label.searching') : '';
+
+    const srAssertiveMsg = userNotFound ? t('label.userNotFound') :
+        actionStatus === 'createError' ? t('label.createError') :
+        actionStatus === 'clearError' ? t('label.clearError') :
+        generatedToken ? t('label.generatedToken') :
+        recipientError || '';
+
     return (
         <div className={styles.st_container}>
             <div className={styles.st_header}>
@@ -134,6 +150,24 @@ export const SupportTokenAdmin = () => {
             </div>
             <div className={styles.st_description}>
                 <Typography>{t('label.description')}</Typography>
+            </div>
+
+            {/* Persistent live regions — always in DOM so AT registers them before content appears */}
+            <div
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className={styles.st_sr_only}
+            >
+                {srPoliteMsg}
+            </div>
+            <div
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                className={styles.st_sr_only}
+            >
+                {srAssertiveMsg}
             </div>
 
             {/* User search */}
@@ -144,6 +178,7 @@ export const SupportTokenAdmin = () => {
                         id="st-username"
                         className={styles.st_input}
                         value={username}
+                        autoComplete="username"
                         placeholder={t('label.usernamePlaceholder')}
                         onChange={e => setUsername(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -162,16 +197,17 @@ export const SupportTokenAdmin = () => {
                 </div>
                 <Button
                     id="st-search"
+                    type="button"
                     label={t('label.search')}
                     variant="primary"
                     isDisabled={searching || !username.trim()}
                     onClick={handleSearch}
                 />
-                {searching && <Loader size="small"/>}
+                {searching && <Loader size="small" aria-hidden="true"/>}
             </div>
 
             {userNotFound && (
-                <div className={`${styles.st_alert} ${styles['st_alert--error']}`}>
+                <div aria-hidden="true" className={`${styles.st_alert} ${styles['st_alert--error']}`}>
                     {t('label.userNotFound')}
                 </div>
             )}
@@ -180,31 +216,40 @@ export const SupportTokenAdmin = () => {
                 <>
                     {/* Feedback alerts */}
                     {actionStatus === 'createSuccess' && (
-                        <div className={`${styles.st_alert} ${styles['st_alert--success']}`}>
+                        <div aria-hidden="true" className={`${styles.st_alert} ${styles['st_alert--success']}`}>
                             {t('label.createSuccess')}
                         </div>
                     )}
                     {actionStatus === 'createError' && (
-                        <div className={`${styles.st_alert} ${styles['st_alert--error']}`}>
+                        <div aria-hidden="true" className={`${styles.st_alert} ${styles['st_alert--error']}`}>
                             {t('label.createError')}
                         </div>
                     )}
                     {actionStatus === 'clearSuccess' && (
-                        <div className={`${styles.st_alert} ${styles['st_alert--success']}`}>
+                        <div aria-hidden="true" className={`${styles.st_alert} ${styles['st_alert--success']}`}>
                             {t('label.clearSuccess')}
                         </div>
                     )}
                     {actionStatus === 'clearError' && (
-                        <div className={`${styles.st_alert} ${styles['st_alert--error']}`}>
+                        <div aria-hidden="true" className={`${styles.st_alert} ${styles['st_alert--error']}`}>
                             {t('label.clearError')}
                         </div>
                     )}
 
                     {/* Generated token display */}
                     {generatedToken && (
-                        <div className={styles.st_tokenBox}>
+                        <div
+                            ref={tokenBoxRef}
+                            tabIndex={-1}
+                            className={styles.st_tokenBox}
+                            aria-labelledby="st-token-label"
+                        >
+                            <p id="st-token-label" className={styles.st_tokenWarning}>
+                                {t('label.generatedToken')}
+                            </p>
                             <span className={styles.st_tokenValue}>{generatedToken}</span>
                             <Button
+                                type="button"
                                 label={copied ? t('label.tokenCopied') : t('label.copyToken')}
                                 variant="ghost"
                                 onClick={handleCopy}
@@ -214,19 +259,21 @@ export const SupportTokenAdmin = () => {
 
                     {/* Existing tokens table */}
                     <div className={styles.st_section}>
-                        <p className={styles.st_sectionTitle}>{t('label.tokensTitle')}</p>
+                        <h3 id="st-tokens-heading" className={styles.st_sectionTitle}>{t('label.tokensTitle')}</h3>
                         {tokens === null || tokens === undefined ? (
-                            <div className={styles.st_loading}><Loader size="small"/></div>
+                            <div className={styles.st_loading} role="status" aria-live="polite">
+                                <Loader size="small" aria-hidden="true"/>
+                            </div>
                         ) : tokens.length === 0 ? (
                             <span className={styles.st_emptyMsg}>{t('label.noTokens')}</span>
                         ) : (
-                            <table className={styles.st_table}>
+                            <table className={styles.st_table} aria-labelledby="st-tokens-heading">
                                 <thead>
                                     <tr>
-                                        <th>{t('label.tokenCreatedDate')}</th>
-                                        <th>{t('label.tokenRecipient')}</th>
-                                        <th>{t('label.tokenDescription')}</th>
-                                        <th>{t('label.tokenExpiration')}</th>
+                                        <th scope="col">{t('label.tokenCreatedDate')}</th>
+                                        <th scope="col">{t('label.tokenRecipient')}</th>
+                                        <th scope="col">{t('label.tokenDescription')}</th>
+                                        <th scope="col">{t('label.tokenExpiration')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -245,19 +292,30 @@ export const SupportTokenAdmin = () => {
 
                     {/* Create token form */}
                     <div className={styles.st_section}>
-                        <p className={styles.st_sectionTitle}>{t('label.createSection')}</p>
+                        <h3 id="st-create-heading" className={styles.st_sectionTitle}>{t('label.createSection')}</h3>
                         <div className={styles.st_form}>
                             <div className={styles.st_formRow}>
                                 <div className={styles.st_fieldGroup}>
                                     <label className={styles.st_label} htmlFor="st-recipient">{t('label.recipient')}</label>
                                     <input
+                                        ref={recipientRef}
                                         id="st-recipient"
+                                        type="email"
+                                        autoComplete="email"
+                                        required
+                                        aria-required="true"
+                                        aria-invalid={!!recipientError}
+                                        aria-describedby={recipientError ? 'st-recipient-error' : undefined}
                                         className={`${styles.st_input}${recipientError ? ` ${styles['st_input--error']}` : ''}`}
                                         value={form.recipient}
                                         placeholder={t('label.recipientPlaceholder')}
                                         onChange={handleFormChange('recipient')}
                                     />
-                                    {recipientError && <span className={styles.st_errorMsg}>{recipientError}</span>}
+                                    {recipientError && (
+                                        <span id="st-recipient-error" className={styles.st_errorMsg} aria-hidden="true">
+                                            {recipientError}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className={styles.st_fieldGroup}>
                                     <label className={styles.st_label} htmlFor="st-expiration">{t('label.expiration')}</label>
@@ -285,6 +343,7 @@ export const SupportTokenAdmin = () => {
                         <div className={styles.st_actions}>
                             <Button
                                 id="st-create-token"
+                                type="button"
                                 label={t('label.createToken')}
                                 variant="primary"
                                 isDisabled={busy}
@@ -292,6 +351,7 @@ export const SupportTokenAdmin = () => {
                             />
                             <Button
                                 id="st-clear-all"
+                                type="button"
                                 label={t('label.clearAllTokens')}
                                 variant="destructive"
                                 isDisabled={busy || !tokens || tokens.length === 0}
