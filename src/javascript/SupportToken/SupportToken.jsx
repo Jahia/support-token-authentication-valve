@@ -448,6 +448,7 @@ export const SupportTokenAdmin = () => {
                         <div className={styles.st_dialogActions}>
                             <button
                                 ref={confirmBtnRef}
+                                id="st-clear-confirm"
                                 type="button"
                                 className={styles.st_dialogConfirmBtn}
                                 onClick={handleClearConfirm}
@@ -456,6 +457,7 @@ export const SupportTokenAdmin = () => {
                             </button>
                             <button
                                 ref={cancelBtnRef}
+                                id="st-clear-cancel"
                                 type="button"
                                 className={styles.st_dialogCancelBtn}
                                 onClick={handleClearCancel}
