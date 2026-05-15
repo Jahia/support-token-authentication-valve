@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useLazyQuery, useMutation} from '@apollo/client';
 import {useTranslation} from 'react-i18next';
 import {Button, Loader, Typography} from '@jahia/moonstone';
@@ -9,6 +9,14 @@ const DEFAULT_FORM = {
     recipient: '',
     description: '',
     expiration: 60
+};
+
+const formatDate = dateStr => {
+    try {
+        return new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'}).format(new Date(dateStr));
+    } catch {
+        return dateStr;
+    }
 };
 
 export const SupportTokenAdmin = () => {
@@ -23,9 +31,13 @@ export const SupportTokenAdmin = () => {
     const [generatedToken, setGeneratedToken] = useState(null);
     const [copied, setCopied] = useState(false);
     const [recipientError, setRecipientError] = useState('');
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
     const recipientRef = useRef(null);
     const tokenBoxRef = useRef(null);
+    const clearAllBtnRef = useRef(null);
+    const confirmBtnRef = useRef(null);
+    const cancelBtnRef = useRef(null);
 
     const [listTokens, {loading: searching, data: tokensData}] = useLazyQuery(LIST_TOKENS, {
         fetchPolicy: 'network-only'
@@ -35,6 +47,20 @@ export const SupportTokenAdmin = () => {
     const [clearAllTokens, {loading: clearing}] = useMutation(CLEAR_ALL_TOKENS);
 
     const tokens = tokensData?.supportTokenListTokens ?? null;
+
+    useEffect(() => {
+        const prev = document.title;
+        document.title = `${t('label.title')} — Jahia Administration`;
+        return () => {
+            document.title = prev;
+        };
+    }, [t]);
+
+    useEffect(() => {
+        if (showClearConfirm && confirmBtnRef.current) {
+            confirmBtnRef.current.focus();
+        }
+    }, [showClearConfirm]);
 
     const handleSearch = async () => {
         if (!username.trim()) {
@@ -121,6 +147,38 @@ export const SupportTokenAdmin = () => {
         }
     };
 
+    const handleClearRequest = () => setShowClearConfirm(true);
+
+    const handleClearConfirm = () => {
+        setShowClearConfirm(false);
+        setTimeout(() => clearAllBtnRef.current?.querySelector('button')?.focus(), 50);
+        handleClear();
+    };
+
+    const handleClearCancel = () => {
+        setShowClearConfirm(false);
+        setTimeout(() => clearAllBtnRef.current?.querySelector('button')?.focus(), 50);
+    };
+
+    const handleDialogKeyDown = e => {
+        if (e.key === 'Escape') {
+            handleClearCancel();
+        } else if (e.key === 'Tab') {
+            const focusable = [confirmBtnRef.current, cancelBtnRef.current].filter(Boolean);
+            if (focusable.length < 2) {
+                return;
+            }
+
+            if (e.shiftKey && document.activeElement === focusable[0]) {
+                e.preventDefault();
+                focusable[focusable.length - 1].focus();
+            } else if (!e.shiftKey && document.activeElement === focusable[focusable.length - 1]) {
+                e.preventDefault();
+                focusable[0].focus();
+            }
+        }
+    };
+
     const handleCopy = () => {
         if (generatedToken) {
             navigator.clipboard.writeText(generatedToken).then(() => {
@@ -133,7 +191,8 @@ export const SupportTokenAdmin = () => {
     const busy = creating || clearing;
 
     // Derived live region content
-    const srPoliteMsg = actionStatus === 'createSuccess' ? t('label.createSuccess') :
+    const srPoliteMsg = copied ? t('label.tokenCopied') :
+        actionStatus === 'createSuccess' ? t('label.createSuccess') :
         actionStatus === 'clearSuccess' ? t('label.clearSuccess') :
         searching ? t('label.searching') : '';
 
@@ -178,6 +237,8 @@ export const SupportTokenAdmin = () => {
                         id="st-username"
                         className={styles.st_input}
                         value={username}
+                        required
+                        aria-required="true"
                         autoComplete="username"
                         placeholder={t('label.usernamePlaceholder')}
                         onChange={e => setUsername(e.target.value)}
@@ -190,6 +251,7 @@ export const SupportTokenAdmin = () => {
                         id="st-sitekey"
                         className={styles.st_input}
                         value={siteKey}
+                        autoComplete="off"
                         placeholder={t('label.siteKeyPlaceholder')}
                         onChange={e => setSiteKey(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -279,7 +341,7 @@ export const SupportTokenAdmin = () => {
                                 <tbody>
                                     {tokens.map(token => (
                                         <tr key={token.createdDate}>
-                                            <td>{token.createdDate}</td>
+                                            <td><time dateTime={token.createdDate}>{formatDate(token.createdDate)}</time></td>
                                             <td>{token.recipient}</td>
                                             <td>{token.description}</td>
                                             <td>{token.expiration}</td>
@@ -304,7 +366,7 @@ export const SupportTokenAdmin = () => {
                                         autoComplete="email"
                                         required
                                         aria-required="true"
-                                        aria-invalid={!!recipientError}
+                                        aria-invalid={recipientError ? 'true' : undefined}
                                         aria-describedby={recipientError ? 'st-recipient-error' : undefined}
                                         className={`${styles.st_input}${recipientError ? ` ${styles['st_input--error']}` : ''}`}
                                         value={form.recipient}
@@ -312,7 +374,7 @@ export const SupportTokenAdmin = () => {
                                         onChange={handleFormChange('recipient')}
                                     />
                                     {recipientError && (
-                                        <span id="st-recipient-error" className={styles.st_errorMsg} aria-hidden="true">
+                                        <span id="st-recipient-error" className={styles.st_errorMsg}>
                                             {recipientError}
                                         </span>
                                     )}
@@ -323,6 +385,7 @@ export const SupportTokenAdmin = () => {
                                         id="st-expiration"
                                         type="number"
                                         min="1"
+                                        autoComplete="off"
                                         className={styles.st_numberInput}
                                         value={form.expiration}
                                         onChange={handleFormChange('expiration')}
@@ -333,6 +396,7 @@ export const SupportTokenAdmin = () => {
                                 <label className={styles.st_label} htmlFor="st-description">{t('label.descriptionField')}</label>
                                 <input
                                     id="st-description"
+                                    autoComplete="off"
                                     className={styles.st_input}
                                     value={form.description}
                                     placeholder={t('label.descriptionPlaceholder')}
@@ -349,17 +413,58 @@ export const SupportTokenAdmin = () => {
                                 isDisabled={busy}
                                 onClick={handleCreate}
                             />
-                            <Button
-                                id="st-clear-all"
-                                type="button"
-                                label={t('label.clearAllTokens')}
-                                variant="destructive"
-                                isDisabled={busy || !tokens || tokens.length === 0}
-                                onClick={handleClear}
-                            />
+                            <span ref={clearAllBtnRef}>
+                                <Button
+                                    id="st-clear-all"
+                                    type="button"
+                                    label={t('label.clearAllTokens')}
+                                    variant="destructive"
+                                    isDisabled={busy || !tokens || tokens.length === 0}
+                                    onClick={handleClearRequest}
+                                />
+                            </span>
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* Confirmation dialog for destructive Clear All action */}
+            {showClearConfirm && (
+                <div className={styles.st_dialogOverlay}>
+                    <div
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="st-clear-dialog-title"
+                        aria-describedby="st-clear-dialog-desc"
+                        className={styles.st_dialog}
+                        onKeyDown={handleDialogKeyDown}
+                    >
+                        <h3 id="st-clear-dialog-title" className={styles.st_dialogTitle}>
+                            {t('label.clearConfirmTitle')}
+                        </h3>
+                        <p id="st-clear-dialog-desc" className={styles.st_dialogDesc}>
+                            {t('label.clearConfirmMessage')}
+                        </p>
+                        <div className={styles.st_dialogActions}>
+                            <button
+                                ref={confirmBtnRef}
+                                type="button"
+                                className={styles.st_dialogConfirmBtn}
+                                onClick={handleClearConfirm}
+                            >
+                                {t('label.clearConfirm')}
+                            </button>
+                            <button
+                                ref={cancelBtnRef}
+                                type="button"
+                                className={styles.st_dialogCancelBtn}
+                                onClick={handleClearCancel}
+                            >
+                                {t('label.cancel')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

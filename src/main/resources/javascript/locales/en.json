@@ -31,6 +31,10 @@
     "createSuccess": "Token created successfully.",
     "createError": "Failed to create token.",
     "clearSuccess": "All tokens cleared.",
-    "clearError": "Failed to clear tokens."
+    "clearError": "Failed to clear tokens.",
+    "clearConfirmTitle": "Clear All Tokens",
+    "clearConfirmMessage": "This will permanently delete all tokens for this user. This action cannot be undone.",
+    "clearConfirm": "Clear All",
+    "cancel": "Cancel"
   }
 }
