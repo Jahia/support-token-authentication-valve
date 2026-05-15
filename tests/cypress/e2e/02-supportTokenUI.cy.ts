@@ -148,21 +148,23 @@ describe('Support Token Authentication Valve - Admin UI', () => {
         beforeEach(() => {
             cy.login();
             cy.visit(ADMIN_URL);
-            cy.get('#st-username').type(TEST_USER);
-            cy.get('#st-search').click();
-            // Ensure at least one token exists
-            cy.get('#st-recipient').type(TEST_RECIPIENT);
-            cy.get('#st-create-token').click();
         });
 
         it('removes all tokens and shows success', () => {
+            cy.get('#st-username').type(TEST_USER)
+            cy.get('#st-search').click()
+            // Ensure at least one token exists
+            cy.get('#st-recipient').type(TEST_RECIPIENT)
+            cy.get('#st-create-token').click()
             cy.get('#st-clear-all').click();
+            cy.get('[id=st-clear-confirm]').click();
             cy.get('[class*="st_alert--success"]').should('contain.text', 'cleared');
             cy.get('[class*="st_emptyMsg"]').should('exist');
         });
 
         it('disables clear button when no tokens exist', () => {
-            cy.get('#st-clear-all').click();
+            cy.get('#st-username').type(TEST_USER)
+            cy.get('#st-search').click()
             cy.get('#st-clear-all').should('be.disabled');
         });
     });
