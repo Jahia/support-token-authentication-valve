@@ -105,7 +105,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         JCRUserNode user = userManagerService.lookupUser(username, site);
         if (user == null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Login failed. Unknown username {}", username.replaceAll("[\r\n]", ""));
+                LOGGER.debug("Login failed. Unknown username {}", sanitizeForLog(username));
             }
             request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.UNKNOWN_USER);
             return null;
@@ -181,9 +181,17 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
                 }
             }
         } catch (RepositoryException ex) {
-            LOGGER.warn("Unable to read tokens for user: " + user.getName(), ex);
+            LOGGER.warn("Unable to read tokens for user: {}", user.getName(), ex);
         }
         return false;
+    }
+
+    private static String sanitizeForLog(String value) {
+        if (value == null) {
+            return null;
+        }
+        // Strip all ISO control characters (CR, LF, TAB, etc.) to prevent log injection.
+        return value.replaceAll("\\p{Cntrl}", "_");
     }
     
     private boolean isTokenMatch(JCRNodeWrapper node, String token) throws RepositoryException {
@@ -216,7 +224,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
     private boolean isLoginRequested(HttpServletRequest request) {
         String doLogin = request.getParameter(LoginEngineAuthValveImpl.LOGIN_TAG_PARAMETER);
         if (doLogin != null) {
-            return Boolean.valueOf(doLogin) || "1".equals(doLogin);
+            return Boolean.parseBoolean(doLogin) || "1".equals(doLogin);
         } else if ("/cms".equals(request.getServletPath())) {
             return Login.getMapping().equals(request.getPathInfo());
         }
