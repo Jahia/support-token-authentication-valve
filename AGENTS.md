@@ -4,7 +4,7 @@ Jahia OSGi module that manages temporary support tokens: a support engineer crea
 
 ## Key Facts
 
-- **artifactId**: `support-token-authentication-valve` | **version**: `3.0.0-SNAPSHOT`
+- **artifactId**: `support-token-authentication-valve` | **version**: `3.0.1-SNAPSHOT`
 - **groupId**: `org.jahia.community`
 - **Java package**: `org.jahia.community.token`
 - **jahia-depends**: `default,graphql-dxm-provider`
@@ -53,7 +53,7 @@ The raw token is **never** stored. Only its bcrypt hash (via `PasswordService`) 
 5. If valid: sets the current user, fires `LoginEvent` + OSGi `org/jahia/usersgroups/login/LOGIN` event, returns (does not fall through to next valve).
 6. On any failure: sets the appropriate `VALVE_RESULT` attribute and calls `invokeNext`.
 
-The valve also guards the token management UI: `main.jsp` (now removed — React handles this via `requiredPermission`) previously blocked access when the session was authenticated via a support token (`sessionScope[constants.supportTokenAuthKey]`).
+There is no longer a `main.jsp` or `supportTokenAuthKey` session attribute — access control for the admin UI is handled entirely by the React `adminRoute` registry entries via `requiredPermission` (`adminUsers` / `siteAdminUsers`).
 
 ## GraphQL API
 
@@ -109,7 +109,7 @@ yarn build:production   # webpack production build
 yarn lint               # ESLint on src/javascript
 ```
 
-- Node: `v22.6.0` | Yarn: `v4.10.3` (`.yarnrc.yml` with `nodeLinker: node-modules`)
+- Node: `v22.6.0` | Yarn: `v1.22.21` (installed by `frontend-maven-plugin`; `.yarnrc.yml` sets `nodeLinker: node-modules`)
 - Output bundle: `src/main/resources/javascript/apps/support-token-authentication-valve.bundle.js`
 - **Lint config**: `.eslintrc.json` (extends `@jahia`), `babel.config.js` (preset-react + preset-env)
 
