@@ -9,7 +9,7 @@
     <groupId>org.jahia.community</groupId>
     <artifactId>support-token-authentication-valve</artifactId>
     <name>Support Token Authentication Valve</name>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.1</version>
     <packaging>bundle</packaging>
     <description>Jahia module that manages temporary support tokens for user authentication.</description>
 
@@ -17,7 +17,7 @@
         <connection>scm:git:git@github.com:Jahia/support-token-authentication-valve.git</connection>
         <developerConnection>scm:git:git@github.com:Jahia/support-token-authentication-valve.git</developerConnection>
         <url>https://github.com/Jahia/support-token-authentication-valve</url>
-        <tag>HEAD</tag>
+        <tag>3_0_1</tag>
     </scm>
 
     <properties>
