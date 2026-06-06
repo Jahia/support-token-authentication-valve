@@ -29,7 +29,7 @@ public class ListCommand implements Action {
     public Object execute() throws RepositoryException {
         final List<String> userTokens = new ArrayList<>();
         if (StringUtils.isBlank(username)) {
-            LOGGER.warn("Impossible to clear the tokens, the username is empty");
+            LOGGER.warn("Impossible to list the tokens, the username is empty");
         } else {
             userTokens.addAll(SupportTokenUtils.listUserTokens(username, siteKey, JahiaUserManagerService.getInstance()));
         }
