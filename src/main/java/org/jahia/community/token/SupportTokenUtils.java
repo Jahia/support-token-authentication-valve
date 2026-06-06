@@ -3,7 +3,6 @@ package org.jahia.community.token;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import javax.jcr.RepositoryException;
@@ -50,8 +49,8 @@ public final class SupportTokenUtils {
             final JCRUserNode jahiaUser = userManagerService.lookupUser(username, siteKey, session);
             if (jahiaUser != null && jahiaUser.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
                 final JCRNodeIteratorWrapper nodeIteratorWrapper = jahiaUser.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
-                for (Iterator<JCRNodeWrapper> iterator = nodeIteratorWrapper.iterator(); nodeIteratorWrapper.hasNext();) {
-                    final JCRNodeWrapper node = iterator.next();
+                while (nodeIteratorWrapper.hasNext()) {
+                    final JCRNodeWrapper node = (JCRNodeWrapper) nodeIteratorWrapper.next();
                     final String description = node.getPropertyAsString(SupportTokenConstants.PROP_DESCRIPTION);
                     final String expiration = node.getPropertyAsString(SupportTokenConstants.PROP_EXPIRATION);
                     final String recipient = node.getPropertyAsString(SupportTokenConstants.PROP_RECIPIENT);
@@ -65,7 +64,6 @@ public final class SupportTokenUtils {
     }
 
     public static boolean addToken(String username, String siteKey, String recipient, String description, Long expiration, String token, JahiaUserManagerService userManagerService) throws RepositoryException {
-        LOGGER.info("Updating user");
         return JCRTemplate.getInstance().doExecuteWithSystemSession((JCRSessionWrapper session) -> {
             final JCRUserNode jahiaUser = userManagerService.lookupUser(username, siteKey, session);
             if (jahiaUser != null) {
@@ -78,7 +76,9 @@ public final class SupportTokenUtils {
                 }
                 final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
                 final Date tokenDate = new Date();
-                final String nodeName = dateFormat.format(tokenDate);
+                // Append a short random suffix so two tokens created in the same second
+                // produce distinct node names and don't collide.
+                final String nodeName = dateFormat.format(tokenDate) + "-" + UUID.randomUUID().toString().substring(0, 8);
                 final JCRNodeWrapper tokenNode = tokenHistory.addNode(nodeName, SupportTokenConstants.NODE_TYPE_TOKEN);
                 tokenNode.setProperty(SupportTokenConstants.PROP_TOKEN, PasswordService.getInstance().digest(token));
                 tokenNode.setProperty(SupportTokenConstants.PROP_EXPIRATION, expiration);
@@ -124,7 +124,7 @@ public final class SupportTokenUtils {
                                 + "Regards,";
 
                         mailService.sendMessage(sender, mailService.defaultRecipient(), null, null, subject,
-                                String.format(body, userKey, tokenDate, description, expiration, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(tokenDate.getTime() + expiration)));
+                                String.format(body, userKey, tokenDate, description, expiration, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(tokenDate.getTime() + expiration * 60_000L)));
                     }
                 } catch (RepositoryException ex) {
                     LOGGER.error("Cannot save user properties", ex);
