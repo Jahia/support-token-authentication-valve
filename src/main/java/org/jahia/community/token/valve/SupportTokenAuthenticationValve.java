@@ -153,6 +153,9 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         if (SettingsBean.getInstance().isConsiderPreferredLanguageAfterLogin()) {
             request.getSession().setAttribute(Constants.SESSION_LOCALE, preferredLocale);
         }
+        // Mark this session as established by a support token so that
+        // token-management operations can refuse service to token-authed callers.
+        request.getSession().setAttribute(SupportTokenConstants.SESSION_SUPPORT_TOKEN_AUTH, Boolean.TRUE);
     }
     
     private void publishLoginEvents(JahiaUser jahiaUser, AuthValveContext authContext) {
