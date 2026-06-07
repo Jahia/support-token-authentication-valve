@@ -4,9 +4,11 @@ import graphql.annotations.annotationTypes.GraphQLDescription;
 import graphql.annotations.annotationTypes.GraphQLField;
 import graphql.annotations.annotationTypes.GraphQLName;
 import graphql.annotations.annotationTypes.GraphQLTypeExtension;
+import graphql.schema.DataFetchingEnvironment;
 import org.jahia.api.Constants;
 import org.jahia.modules.graphql.provider.dxm.DXGraphQLProvider;
 import org.jahia.modules.graphql.provider.dxm.security.GraphQLRequiresPermission;
+import org.jahia.modules.graphql.provider.dxm.util.ContextUtil;
 import org.jahia.community.token.SupportTokenConstants;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
@@ -17,9 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 @GraphQLTypeExtension(DXGraphQLProvider.Query.class)
@@ -38,8 +41,13 @@ public class SupportTokenQueryExtension {
     @GraphQLRequiresPermission("admin")
     public static List<GqlSupportTokenInfo> listTokens(
             @GraphQLName("username") @GraphQLDescription("Username to query") String username,
-            @GraphQLName("siteKey") @GraphQLDescription("Site key (null for global users)") String siteKey) {
+            @GraphQLName("siteKey") @GraphQLDescription("Site key (null for global users)") String siteKey,
+            DataFetchingEnvironment environment) {
 
+        if (isTokenAuthenticatedSession(environment)) {
+            LOGGER.warn("supportTokenListTokens: refused — caller is authenticated via a support token");
+            return Collections.emptyList();
+        }
         if (username == null || username.isEmpty()) {
             return Collections.emptyList();
         }
@@ -52,8 +60,8 @@ public class SupportTokenQueryExtension {
                 final List<GqlSupportTokenInfo> result = new ArrayList<>();
                 if (user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
                     final JCRNodeIteratorWrapper iter = user.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
-                    for (Iterator<JCRNodeWrapper> it = iter.iterator(); iter.hasNext(); ) {
-                        final JCRNodeWrapper node = it.next();
+                    while (iter.hasNext()) {
+                        final JCRNodeWrapper node = (JCRNodeWrapper) iter.next();
                         final String createdDate = node.getPropertyAsString(Constants.JCR_CREATED);
                         final String recipient = node.getPropertyAsString(SupportTokenConstants.PROP_RECIPIENT);
                         final String description = node.getPropertyAsString(SupportTokenConstants.PROP_DESCRIPTION);
@@ -114,5 +122,19 @@ public class SupportTokenQueryExtension {
         public String getDescription() {
             return description;
         }
+    }
+
+    /**
+     * Returns {@code true} when the caller's HTTP session was established by the support-token
+     * auth valve.  Token-authenticated sessions must not be allowed to read token metadata
+     * (information disclosure prevention).
+     */
+    private static boolean isTokenAuthenticatedSession(DataFetchingEnvironment environment) {
+        final HttpServletRequest request = ContextUtil.getHttpServletRequest(environment.getContext());
+        if (request == null) {
+            return false;
+        }
+        final HttpSession session = request.getSession(false);
+        return session != null && Boolean.TRUE.equals(session.getAttribute(SupportTokenConstants.SESSION_SUPPORT_TOKEN_AUTH));
     }
 }
