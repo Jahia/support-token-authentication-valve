@@ -38,7 +38,7 @@ public class SupportTokenQueryExtension {
     @GraphQLField
     @GraphQLName("supportTokenListTokens")
     @GraphQLDescription("Lists the active tokens for a user")
-    @GraphQLRequiresPermission("admin")
+    @GraphQLRequiresPermission("supportTokenAdmin")
     public static List<GqlSupportTokenInfo> listTokens(
             @GraphQLName("username") @GraphQLDescription("Username to query") String username,
             @GraphQLName("siteKey") @GraphQLDescription("Site key (null for global users)") String siteKey,
