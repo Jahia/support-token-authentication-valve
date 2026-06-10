@@ -6,6 +6,7 @@ import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.jahia.community.token.SupportTokenConstants;
 import org.jahia.community.token.SupportTokenUtils;
 import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.slf4j.Logger;
@@ -27,10 +28,10 @@ public class CreateCommand implements Action {
     private String recipient = null;
 
     @Option(name = "-d", aliases = "--description", description = "Description")
-    private String description = "Access for Jahia Support";
+    private String description = SupportTokenConstants.DEFAULT_DESCRIPTION;
 
     @Option(name = "-e", aliases = "--expiration", description = "Expiration (in minutes)")
-    private Long expiration = 60L;
+    private Long expiration = SupportTokenConstants.DEFAULT_EXPIRATION_MINUTES;
 
     @Override
     public Object execute() throws RepositoryException {

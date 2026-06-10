@@ -54,8 +54,8 @@ public class SupportTokenMutationExtension {
                     username,
                     siteKey,
                     recipient,
-                    description != null ? description : "Access for Jahia Support",
-                    expiration != null ? expiration : 60L,
+                    description != null ? description : SupportTokenConstants.DEFAULT_DESCRIPTION,
+                    expiration != null ? expiration : SupportTokenConstants.DEFAULT_EXPIRATION_MINUTES,
                     token,
                     JahiaUserManagerService.getInstance());
             return ok ? token : null;

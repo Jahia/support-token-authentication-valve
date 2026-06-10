@@ -1,6 +1,6 @@
 package org.jahia.community.token.valve;
 
-import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -189,7 +189,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         return false;
     }
 
-    private static String sanitizeForLog(String value) {
+    static String sanitizeForLog(String value) {
         if (value == null) {
             return null;
         }
@@ -206,14 +206,27 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
     }
     
     private boolean isTokenExpired(JCRNodeWrapper node) throws RepositoryException {
+        // Fail closed: a token without an expiration property is treated as expired rather
+        // than as a token that never expires. An auth valve must not grant a permanent token.
         if (!node.hasProperty(SupportTokenConstants.PROP_EXPIRATION)) {
-            return false;
+            return true;
         }
-        final Calendar currentCalendar = Calendar.getInstance();
-        final Calendar expiredCalendar = Calendar.getInstance();
-        expiredCalendar.setTime(node.getCreationDateAsDate());
-        expiredCalendar.add(Calendar.MINUTE, node.getProperty(SupportTokenConstants.PROP_EXPIRATION).getDecimal().intValue());
-        return currentCalendar.after(expiredCalendar);
+        final int expirationMinutes = node.getProperty(SupportTokenConstants.PROP_EXPIRATION).getDecimal().intValue();
+        return isExpired(node.getCreationDateAsDate(), expirationMinutes, new Date());
+    }
+
+    /**
+     * Pure expiry check. A token is expired when it has no creation date, a non-positive
+     * lifetime, or when {@code now} is at/after {@code creationDate + expirationMinutes}.
+     * Any ambiguous input is treated as expired (fail closed).
+     */
+    static boolean isExpired(Date creationDate, int expirationMinutes, Date now) {
+        if (creationDate == null || now == null || expirationMinutes <= 0) {
+            return true;
+        }
+        final long expiryMillis = creationDate.getTime()
+                + (long) expirationMinutes * SupportTokenConstants.MILLIS_PER_MINUTE;
+        return now.getTime() >= expiryMillis;
     }
 
     public static class LoginEvent extends BaseLoginEvent {
