@@ -6,7 +6,7 @@ export default () => {
     console.debug('%c support-token-authentication-valve: activation in progress', 'color: #006633');
     registry.add('adminRoute', 'supportTokenAdmin', {
         targets: ['administration-server-usersAndRoles:10'],
-        requiredPermission: 'adminUsers',
+        requiredPermission: 'supportTokenAdmin',
         label: 'support-token-authentication-valve:label.menu_entry',
         isSelectable: true,
         render: () => React.createElement(SupportTokenAdmin)
