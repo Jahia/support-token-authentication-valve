@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roles jcr:primaryType="jnt:roles"
+       xmlns:jcr="http://www.jcp.org/jcr/1.0"
+       xmlns:j="http://www.jahia.org/jahia/1.0"
+       xmlns:jnt="http://www.jahia.org/jahia/nt/1.0">
+
+    <support-token-authentication-valve-administrator jcr:primaryType="jnt:role"
+                                                       j:nodeTypes="rep:root"
+                                                       j:roleGroup="server-role"
+                                                       j:permissionNames="administrationAccess supportTokenAdmin"
+                                                       j:privilegedAccess="true">
+        <j:translation_en jcr:primaryType="jnt:translation"
+                          jcr:language="en"
+                          jcr:title="Support Token administrator"
+                          jcr:description="Grants access to the Support Token administration without requiring full server administrator rights"/>
+    </support-token-authentication-valve-administrator>
+</roles>
