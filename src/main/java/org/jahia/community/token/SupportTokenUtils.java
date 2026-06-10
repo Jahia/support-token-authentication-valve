@@ -66,7 +66,12 @@ public final class SupportTokenUtils {
     public static boolean addToken(String username, String siteKey, String recipient, String description, Long expiration, String token, JahiaUserManagerService userManagerService) throws RepositoryException {
         return JCRTemplate.getInstance().doExecuteWithSystemSession((JCRSessionWrapper session) -> {
             final JCRUserNode jahiaUser = userManagerService.lookupUser(username, siteKey, session);
-            if (jahiaUser != null) {
+            if (jahiaUser == null) {
+                // Report failure instead of a misleading success when the target user is unknown.
+                LOGGER.warn("Cannot add token: unknown user");
+                return false;
+            }
+            {
                 jahiaUser.addMixin(SupportTokenConstants.MIXIN_TOKEN_HISTORY);
                 final JCRNodeWrapper tokenHistory;
                 if (jahiaUser.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
@@ -78,7 +83,8 @@ public final class SupportTokenUtils {
                 final Date tokenDate = new Date();
                 // Append a short random suffix so two tokens created in the same second
                 // produce distinct node names and don't collide.
-                final String nodeName = dateFormat.format(tokenDate) + "-" + UUID.randomUUID().toString().substring(0, 8);
+                final String nodeName = dateFormat.format(tokenDate) + "-"
+                        + UUID.randomUUID().toString().substring(0, SupportTokenConstants.NODE_NAME_SUFFIX_LENGTH);
                 final JCRNodeWrapper tokenNode = tokenHistory.addNode(nodeName, SupportTokenConstants.NODE_TYPE_TOKEN);
                 tokenNode.setProperty(SupportTokenConstants.PROP_TOKEN, PasswordService.getInstance().digest(token));
                 tokenNode.setProperty(SupportTokenConstants.PROP_EXPIRATION, expiration);
@@ -124,7 +130,7 @@ public final class SupportTokenUtils {
                                 + "Regards,";
 
                         mailService.sendMessage(sender, mailService.defaultRecipient(), null, null, subject,
-                                String.format(body, userKey, tokenDate, description, expiration, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(tokenDate.getTime() + expiration * 60_000L)));
+                                String.format(body, userKey, tokenDate, description, expiration, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(tokenDate.getTime() + expiration * SupportTokenConstants.MILLIS_PER_MINUTE)));
                     }
                 } catch (RepositoryException ex) {
                     LOGGER.error("Cannot save user properties", ex);
