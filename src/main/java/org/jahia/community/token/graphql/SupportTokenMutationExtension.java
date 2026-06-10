@@ -31,7 +31,7 @@ public class SupportTokenMutationExtension {
     @GraphQLField
     @GraphQLName("supportTokenCreate")
     @GraphQLDescription("Creates a temporary support token for a user. Returns the generated token string, or null on failure.")
-    @GraphQLRequiresPermission("admin")
+    @GraphQLRequiresPermission("supportTokenAdmin")
     public static String createToken(
             @GraphQLName("username") @GraphQLDescription("Username to create the token for") String username,
             @GraphQLName("siteKey") @GraphQLDescription("Site key (null for global users)") String siteKey,
@@ -68,7 +68,7 @@ public class SupportTokenMutationExtension {
     @GraphQLField
     @GraphQLName("supportTokenClearAll")
     @GraphQLDescription("Removes all support tokens for a user")
-    @GraphQLRequiresPermission("admin")
+    @GraphQLRequiresPermission("supportTokenAdmin")
     public static Boolean clearAllTokens(
             @GraphQLName("username") @GraphQLDescription("Username whose tokens should be cleared") String username,
             @GraphQLName("siteKey") @GraphQLDescription("Site key (null for global users)") String siteKey,
