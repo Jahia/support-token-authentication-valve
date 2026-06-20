@@ -46,7 +46,7 @@ export const SupportTokenAdmin = () => {
     const [createToken, {loading: creating}] = useMutation(CREATE_TOKEN);
     const [clearAllTokens, {loading: clearing}] = useMutation(CLEAR_ALL_TOKENS);
 
-    const tokens = tokensData?.supportTokenListTokens ?? null;
+    const tokens = tokensData?.supportToken?.listTokens ?? null;
 
     useEffect(() => {
         const prev = document.title;
@@ -76,7 +76,7 @@ export const SupportTokenAdmin = () => {
         const result = await listTokens({
             variables: {username: username.trim(), siteKey: siteKey.trim() || null}
         });
-        if (result.data?.supportTokenListTokens === null) {
+        if (result.data?.supportToken?.listTokens === null) {
             setUserNotFound(true);
         } else {
             setSearchedUser(username.trim());
@@ -112,7 +112,7 @@ export const SupportTokenAdmin = () => {
                     expiration: form.expiration
                 }
             });
-            const token = result.data?.supportTokenCreate;
+            const token = result.data?.supportToken?.create;
             if (token) {
                 setGeneratedToken(token);
                 setActionStatus('createSuccess');
@@ -135,7 +135,7 @@ export const SupportTokenAdmin = () => {
             const result = await clearAllTokens({
                 variables: {username: searchedUser, siteKey: siteKey.trim() || null}
             });
-            if (result.data?.supportTokenClearAll) {
+            if (result.data?.supportToken?.clearAll) {
                 setActionStatus('clearSuccess');
                 listTokens({variables: {username: searchedUser, siteKey: siteKey.trim() || null}});
             } else {

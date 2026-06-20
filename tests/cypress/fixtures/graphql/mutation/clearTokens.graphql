@@ -1,3 +1,5 @@
 mutation SupportTokenClearAll($username: String!, $siteKey: String) {
-    supportTokenClearAll(username: $username, siteKey: $siteKey)
+    supportToken {
+        clearAll(username: $username, siteKey: $siteKey)
+    }
 }

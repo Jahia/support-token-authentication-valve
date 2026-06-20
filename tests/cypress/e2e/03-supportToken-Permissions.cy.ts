@@ -5,8 +5,8 @@ import {createUser, deleteUser, grantRoles} from '@jahia/cypress';
  * Regression tests for the fine-grained `supportTokenAdmin` permission.
  *
  * These guard against the gate being silently removed or mismatched across the stack:
- *  - Backend: `@GraphQLRequiresPermission("supportTokenAdmin")` on the top-level
- *    `supportTokenListTokens` query is enforced as `session.getNode("/").hasPermission("supportTokenAdmin")`.
+ *  - Backend: `@GraphQLRequiresPermission("supportTokenAdmin")` on the
+ *    `supportToken.listTokens` query is enforced as `session.getNode("/").hasPermission("supportTokenAdmin")`.
  *  - Frontend: `requiredPermission: 'supportTokenAdmin'` in register.jsx gates the server admin route.
  *  - RBAC content: the module ships the assignable `support-token-authentication-valve-administrator`
  *    role (src/main/import/roles.xml) granting only `administrationAccess` + `supportTokenAdmin`.
@@ -62,7 +62,7 @@ describe('Support Token — permission enforcement', () => {
             listTokensAs(ALLOWED_USER).then((result: never) => {
                 expect(errorsOf(result), 'should have no errors').to.have.length(0);
                 // root exists and has no support tokens → an empty list is returned (not null).
-                expect((result as {data: {supportTokenListTokens: unknown[]}}).data.supportTokenListTokens).to.be.an('array');
+                expect((result as {data: {supportToken: {listTokens: unknown[]}}}).data.supportToken.listTokens).to.be.an('array');
             });
         });
     });
