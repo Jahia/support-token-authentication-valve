@@ -129,6 +129,7 @@ public class SupportTokenQueryExtension {
      * auth valve.  Token-authenticated sessions must not be allowed to read token metadata
      * (information disclosure prevention).
      */
+    @SuppressWarnings("java:S1874") // DXM ContextUtil consumes the legacy DataFetchingEnvironment context; no non-deprecated overload is available in this DXM version.
     private static boolean isTokenAuthenticatedSession(DataFetchingEnvironment environment) {
         final HttpServletRequest request = ContextUtil.getHttpServletRequest(environment.getContext());
         if (request == null) {

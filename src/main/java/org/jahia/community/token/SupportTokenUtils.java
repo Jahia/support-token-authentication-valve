@@ -71,71 +71,69 @@ public final class SupportTokenUtils {
                 LOGGER.warn("Cannot add token: unknown user");
                 return false;
             }
-            {
-                jahiaUser.addMixin(SupportTokenConstants.MIXIN_TOKEN_HISTORY);
-                final JCRNodeWrapper tokenHistory;
-                if (jahiaUser.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
-                    tokenHistory = jahiaUser.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY);
-                } else {
-                    tokenHistory = jahiaUser.addNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY, SupportTokenConstants.NODE_TYPE_TOKEN_HISTORY);
+            jahiaUser.addMixin(SupportTokenConstants.MIXIN_TOKEN_HISTORY);
+            final JCRNodeWrapper tokenHistory;
+            if (jahiaUser.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
+                tokenHistory = jahiaUser.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY);
+            } else {
+                tokenHistory = jahiaUser.addNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY, SupportTokenConstants.NODE_TYPE_TOKEN_HISTORY);
+            }
+            final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+            final Date tokenDate = new Date();
+            // Append a short random suffix so two tokens created in the same second
+            // produce distinct node names and don't collide.
+            final String nodeName = dateFormat.format(tokenDate) + "-"
+                    + UUID.randomUUID().toString().substring(0, SupportTokenConstants.NODE_NAME_SUFFIX_LENGTH);
+            final JCRNodeWrapper tokenNode = tokenHistory.addNode(nodeName, SupportTokenConstants.NODE_TYPE_TOKEN);
+            tokenNode.setProperty(SupportTokenConstants.PROP_TOKEN, PasswordService.getInstance().digest(token));
+            tokenNode.setProperty(SupportTokenConstants.PROP_EXPIRATION, expiration);
+            tokenNode.setProperty(SupportTokenConstants.PROP_DESCRIPTION, description);
+            tokenNode.setProperty(SupportTokenConstants.PROP_RECIPIENT, recipient);
+            try {
+                session.save();
+                final MailService mailService = MailService.getInstance();
+                if (mailService.isEnabled()) {
+
+                    // We send an email to the recipient of the token
+                    final String userKey = jahiaUser.getUserKey();
+                    final String sender = mailService.defaultSender();
+                    final String subject = "Jahia support token generated";
+                    String body = "Hi,\n"
+                            + "\n"
+                            + "We're sending this email following a successful token generation for the user %s.\n"
+                            + "\n"
+                            + "\tToken\t: %s\n"
+                            + "\tGeneration time\t: %s\n"
+                            + "\tDescription\t: %s\n"
+                            + "\tExpiration (in min)\t: %s"
+                            + "\n"
+                            + "\n"
+                            + "\n"
+                            + "Regards,";
+
+                    mailService.sendMessage(sender, recipient, null, null, subject,
+                            String.format(body, userKey, token, tokenDate, description, expiration));
+
+                    // We send an email to the default recipient of the Jahia notification for audit purposes
+                    body = "Hi,\n"
+                            + "\n"
+                            + "We're sending this email following a successful token generation for the user %s.\n"
+                            + "\n"
+                            + "\tGeneration time\t: %s\n"
+                            + "\tDescription\t: %s\n"
+                            + "\tExpiration (in min)\t: %s\n"
+                            + "\tExpiration date\t: %s"
+                            + "\n"
+                            + "\n"
+                            + "\n"
+                            + "Regards,";
+
+                    mailService.sendMessage(sender, mailService.defaultRecipient(), null, null, subject,
+                            String.format(body, userKey, tokenDate, description, expiration, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(tokenDate.getTime() + expiration * SupportTokenConstants.MILLIS_PER_MINUTE)));
                 }
-                final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-                final Date tokenDate = new Date();
-                // Append a short random suffix so two tokens created in the same second
-                // produce distinct node names and don't collide.
-                final String nodeName = dateFormat.format(tokenDate) + "-"
-                        + UUID.randomUUID().toString().substring(0, SupportTokenConstants.NODE_NAME_SUFFIX_LENGTH);
-                final JCRNodeWrapper tokenNode = tokenHistory.addNode(nodeName, SupportTokenConstants.NODE_TYPE_TOKEN);
-                tokenNode.setProperty(SupportTokenConstants.PROP_TOKEN, PasswordService.getInstance().digest(token));
-                tokenNode.setProperty(SupportTokenConstants.PROP_EXPIRATION, expiration);
-                tokenNode.setProperty(SupportTokenConstants.PROP_DESCRIPTION, description);
-                tokenNode.setProperty(SupportTokenConstants.PROP_RECIPIENT, recipient);
-                try {
-                    session.save();
-                    final MailService mailService = MailService.getInstance();
-                    if (mailService.isEnabled()) {
-
-                        // We send an email to the recipient of the token
-                        final String userKey = jahiaUser.getUserKey();
-                        final String sender = mailService.defaultSender();
-                        final String subject = "Jahia support token generated";
-                        String body = "Hi,\n"
-                                + "\n"
-                                + "We're sending this email following a successful token generation for the user %s.\n"
-                                + "\n"
-                                + "\tToken\t: %s\n"
-                                + "\tGeneration time\t: %s\n"
-                                + "\tDescription\t: %s\n"
-                                + "\tExpiration (in min)\t: %s"
-                                + "\n"
-                                + "\n"
-                                + "\n"
-                                + "Regards,";
-
-                        mailService.sendMessage(sender, recipient, null, null, subject,
-                                String.format(body, userKey, token, tokenDate, description, expiration));
-
-                        // We send an email to the default recipient of the Jahia notification for audit purposes
-                        body = "Hi,\n"
-                                + "\n"
-                                + "We're sending this email following a successful token generation for the user %s.\n"
-                                + "\n"
-                                + "\tGeneration time\t: %s\n"
-                                + "\tDescription\t: %s\n"
-                                + "\tExpiration (in min)\t: %s\n"
-                                + "\tExpiration date\t: %s"
-                                + "\n"
-                                + "\n"
-                                + "\n"
-                                + "Regards,";
-
-                        mailService.sendMessage(sender, mailService.defaultRecipient(), null, null, subject,
-                                String.format(body, userKey, tokenDate, description, expiration, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(tokenDate.getTime() + expiration * SupportTokenConstants.MILLIS_PER_MINUTE)));
-                    }
-                } catch (RepositoryException ex) {
-                    LOGGER.error("Cannot save user properties", ex);
-                    return false;
-                }
+            } catch (RepositoryException ex) {
+                LOGGER.error("Cannot save user properties", ex);
+                return false;
             }
             return true;
         });

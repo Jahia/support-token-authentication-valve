@@ -225,7 +225,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
             return true;
         }
         final long expiryMillis = creationDate.getTime()
-                + (long) expirationMinutes * SupportTokenConstants.MILLIS_PER_MINUTE;
+                + expirationMinutes * SupportTokenConstants.MILLIS_PER_MINUTE;
         return now.getTime() >= expiryMillis;
     }
 

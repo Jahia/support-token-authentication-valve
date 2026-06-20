@@ -27,8 +27,7 @@ public class SupportTokenLogSanitizerTest {
 
         String result = SupportTokenAuthenticationValve.sanitizeForLog(forged);
 
-        assertThat(result).doesNotContain("\r").doesNotContain("\n");
-        assertThat(result).isEqualTo("alice__ADMIN logged in");
+        assertThat(result).doesNotContain("\r").doesNotContain("\n").isEqualTo("alice__ADMIN logged in");
     }
 
     @Test
