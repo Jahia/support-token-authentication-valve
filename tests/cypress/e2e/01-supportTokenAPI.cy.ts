@@ -27,13 +27,13 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
     describe('supportTokenListTokens', () => {
         it('returns an array for a known user', () => {
             cy.apollo({query: listTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenListTokens')
+                .its('data.supportToken.listTokens')
                 .should('be.an', 'array');
         });
 
         it('returns null for an unknown user', () => {
             cy.apollo({query: listTokens, variables: {username: 'nonexistent-user-xyz'}})
-                .its('data.supportTokenListTokens')
+                .its('data.supportToken.listTokens')
                 .should('be.null');
         });
 
@@ -48,7 +48,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                 }
             });
             cy.apollo({query: listTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenListTokens')
+                .its('data.supportToken.listTokens')
                 .should(tokens => {
                     expect(tokens).to.be.an('array').with.length.greaterThan(0);
                     const token = tokens[0];
@@ -61,7 +61,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
 
         it('returns tokens with correct field types', () => {
             cy.apollo({query: listTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenListTokens')
+                .its('data.supportToken.listTokens')
                 .should(tokens => {
                     expect(tokens).to.be.an('array').with.length.greaterThan(0);
                     const token = tokens[0];
@@ -87,7 +87,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                     expiration: 60
                 }
             })
-                .its('data.supportTokenCreate')
+                .its('data.supportToken.create')
                 .should('be.a', 'string')
                 .and('not.be.empty');
         });
@@ -98,7 +98,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                 mutation: createToken,
                 variables: {username: TEST_USER, recipient: TEST_RECIPIENT, expiration: 60}
             })
-                .its('data.supportTokenCreate')
+                .its('data.supportToken.create')
                 .should('match', /^[0-9a-f-]{36}$/);
         });
 
@@ -107,7 +107,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                 mutation: createToken,
                 variables: {username: '', recipient: TEST_RECIPIENT, expiration: 60}
             })
-                .its('data.supportTokenCreate')
+                .its('data.supportToken.create')
                 .should('be.null');
         });
 
@@ -116,21 +116,21 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                 mutation: createToken,
                 variables: {username: TEST_USER, recipient: '', expiration: 60}
             })
-                .its('data.supportTokenCreate')
+                .its('data.supportToken.create')
                 .should('be.null');
         });
 
         it('increments the token count after creation', () => {
             cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}});
             cy.apollo({query: listTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenListTokens.length')
+                .its('data.supportToken.listTokens.length')
                 .should('eq', 0);
             cy.apollo({
                 mutation: createToken,
                 variables: {username: TEST_USER, recipient: TEST_RECIPIENT, expiration: 60}
             });
             cy.apollo({query: listTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenListTokens.length')
+                .its('data.supportToken.listTokens.length')
                 .should('eq', 1);
         });
 
@@ -146,7 +146,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                 }
             });
             cy.apollo({query: listTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenListTokens.0')
+                .its('data.supportToken.listTokens.0')
                 .should(token => {
                     expect(token.recipient).to.eq(TEST_RECIPIENT);
                     expect(token.expiration).to.eq(120);
@@ -166,7 +166,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
                     expiration: 60
                 }
             })
-                .its('data.supportTokenCreate')
+                .its('data.supportToken.create')
                 .should('be.a', 'string')
                 .then((token: string) => {
                     cy.mailpitHasEmailsByTo(TEST_RECIPIENT, 0, 50, {timeout: 30000})
@@ -189,7 +189,7 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
     describe('supportTokenClearAll', () => {
         it('returns true on success', () => {
             cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenClearAll')
+                .its('data.supportToken.clearAll')
                 .should('eq', true);
         });
 
@@ -200,13 +200,13 @@ describe('Support Token Authentication Valve - GraphQL API', () => {
             });
             cy.apollo({mutation: clearTokens, variables: {username: TEST_USER}});
             cy.apollo({query: listTokens, variables: {username: TEST_USER}})
-                .its('data.supportTokenListTokens.length')
+                .its('data.supportToken.listTokens.length')
                 .should('eq', 0);
         });
 
         it('returns false for an empty username', () => {
             cy.apollo({mutation: clearTokens, variables: {username: ''}})
-                .its('data.supportTokenClearAll')
+                .its('data.supportToken.clearAll')
                 .should('eq', false);
         });
     });
