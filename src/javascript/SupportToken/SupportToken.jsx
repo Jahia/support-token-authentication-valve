@@ -240,36 +240,37 @@ export const SupportTokenAdmin = () => {
 
     return (
         <div className={styles.st_container}>
-            <div className={styles.st_header}>
-                <h2>{t('label.title')}</h2>
-            </div>
-            <div className={styles.st_description}>
-                <Typography>{t('label.description')}</Typography>
-            </div>
+            <div className={styles.st_content}>
+                <div className={styles.st_header}>
+                    <h2>{t('label.title')}</h2>
+                </div>
+                <div className={styles.st_description}>
+                    <Typography>{t('label.description')}</Typography>
+                </div>
 
-            {/* Persistent live regions — always in DOM so AT registers them before content appears */}
-            <div
+                {/* Persistent live regions — always in DOM so AT registers them before content appears */}
+                <div
                 role="status"
                 aria-live="polite"
                 aria-atomic="true"
                 className={styles.st_sr_only}
-            >
-                {srPoliteMsg}
-            </div>
-            <div
+                >
+                    {srPoliteMsg}
+                </div>
+                <div
                 role="alert"
                 aria-live="assertive"
                 aria-atomic="true"
                 className={styles.st_sr_only}
-            >
-                {srAssertiveMsg}
-            </div>
+                >
+                    {srAssertiveMsg}
+                </div>
 
-            {/* User search */}
-            <div className={styles.st_searchRow}>
-                <div className={styles.st_fieldGroup}>
-                    <label className={styles.st_label} htmlFor="st-username">{t('label.username')}</label>
-                    <input
+                {/* User search */}
+                <div className={styles.st_searchRow}>
+                    <div className={styles.st_fieldGroup}>
+                        <label className={styles.st_label} htmlFor="st-username">{t('label.username')}</label>
+                        <input
                         required
                         id="st-username"
                         className={styles.st_input}
@@ -280,10 +281,10 @@ export const SupportTokenAdmin = () => {
                         onChange={e => setUsername(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
                     />
-                </div>
-                <div className={styles.st_fieldGroup}>
-                    <label className={styles.st_label} htmlFor="st-sitekey">{t('label.siteKey')}</label>
-                    <input
+                    </div>
+                    <div className={styles.st_fieldGroup}>
+                        <label className={styles.st_label} htmlFor="st-sitekey">{t('label.siteKey')}</label>
+                        <input
                         id="st-sitekey"
                         className={styles.st_input}
                         value={siteKey}
@@ -292,8 +293,8 @@ export const SupportTokenAdmin = () => {
                         onChange={e => setSiteKey(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSearch()}
                     />
-                </div>
-                <Button
+                    </div>
+                    <Button
                     id="st-search"
                     type="button"
                     label={t('label.search')}
@@ -301,16 +302,16 @@ export const SupportTokenAdmin = () => {
                     isDisabled={searching || !username.trim()}
                     onClick={handleSearch}
                 />
-                {searching && <Loader size="small" aria-hidden="true"/>}
-            </div>
+                    {searching && <Loader size="small" aria-hidden="true"/>}
+                </div>
 
-            {userNotFound && (
+                {userNotFound && (
                 <div aria-hidden="true" className={`${styles.st_alert} ${styles['st_alert--error']}`}>
                     {t('label.userNotFound')}
                 </div>
             )}
 
-            {searchedUser && (
+                {searchedUser && (
                 <>
                     {/* Feedback alerts */}
                     {actionStatus === 'createSuccess' && (
@@ -459,8 +460,8 @@ export const SupportTokenAdmin = () => {
                 </>
             )}
 
-            {/* Confirmation dialog for destructive Clear All action */}
-            {showClearConfirm && (
+                {/* Confirmation dialog for destructive Clear All action */}
+                {showClearConfirm && (
                 <div className={styles.st_dialogOverlay}>
                     <div
                         role="alertdialog"
@@ -499,6 +500,7 @@ export const SupportTokenAdmin = () => {
                     </div>
                 </div>
             )}
+            </div>
         </div>
     );
 };

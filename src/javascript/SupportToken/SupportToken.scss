@@ -10,17 +10,23 @@
     border: 0;
 }
 
+// Full-width scroll host so the vertical scrollbar sits at the window's right edge
 .st_container {
     height: 100%;
     box-sizing: border-box;
     overflow-y: auto;
-    padding: 24px 32px;
-    max-width: 800px;
 
     button:focus-visible {
         outline: 2px solid #0077cc;
         outline-offset: 2px;
     }
+}
+
+// Actual content, width-capped and left-aligned inside the full-width scroll host
+.st_content {
+    box-sizing: border-box;
+    padding: 24px 32px;
+    max-width: 800px;
 }
 
 .st_header {
