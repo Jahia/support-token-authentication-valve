@@ -12,6 +12,8 @@
     "userNotFound": "User not found",
     "noTokens": "No tokens for this user.",
     "tokensTitle": "Active tokens",
+    "expiredTokensTitle": "Expired tokens",
+    "noExpiredTokens": "No expired tokens for this user.",
     "tokenCreatedDate": "Created",
     "tokenRecipient": "Recipient",
     "tokenDescription": "Description",

@@ -19,6 +19,35 @@ const formatDate = dateStr => {
     }
 };
 
+// A token is expired once (creation time + expiration minutes) is in the past.
+// Mirrors the server-side expiry check in SupportTokenAuthenticationValve.
+const isExpired = token =>
+    new Date(token.createdDate).getTime() + ((token.expiration ?? 0) * 60 * 1000) <= Date.now();
+
+// Shared table renderer for both the active and expired token lists (identical columns).
+const renderTokenTable = (tokens, headingId, t) => (
+    <table className={styles.st_table} aria-labelledby={headingId}>
+        <thead>
+            <tr>
+                <th scope="col">{t('label.tokenCreatedDate')}</th>
+                <th scope="col">{t('label.tokenRecipient')}</th>
+                <th scope="col">{t('label.tokenDescription')}</th>
+                <th scope="col">{t('label.tokenExpiration')}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {tokens.map(token => (
+                <tr key={token.createdDate}>
+                    <td><time dateTime={token.createdDate}>{formatDate(token.createdDate)}</time></td>
+                    <td>{token.recipient}</td>
+                    <td>{token.description}</td>
+                    <td>{token.expiration}</td>
+                </tr>
+            ))}
+        </tbody>
+    </table>
+);
+
 export const SupportTokenAdmin = () => {
     const {t} = useTranslation('support-token-authentication-valve');
 
@@ -46,7 +75,14 @@ export const SupportTokenAdmin = () => {
     const [createToken, {loading: creating}] = useMutation(CREATE_TOKEN);
     const [clearAllTokens, {loading: clearing}] = useMutation(CLEAR_ALL_TOKENS);
 
-    const tokens = tokensData?.supportToken?.listTokens ?? null;
+    const rawTokens = tokensData?.supportToken?.listTokens ?? null;
+    // Sort a copy (never mutate Apollo cache data) by creation date, most recent first
+    const tokens = rawTokens ?
+        [...rawTokens].sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate)) :
+        rawTokens;
+    // Split into active vs. expired for separate tables (null preserved while loading / user not found)
+    const activeTokens = tokens ? tokens.filter(token => !isExpired(token)) : tokens;
+    const expiredTokens = tokens ? tokens.filter(isExpired) : tokens;
 
     useEffect(() => {
         const prev = document.title;
@@ -193,14 +229,14 @@ export const SupportTokenAdmin = () => {
     // Derived live region content
     const srPoliteMsg = copied ? t('label.tokenCopied') :
         actionStatus === 'createSuccess' ? t('label.createSuccess') :
-        actionStatus === 'clearSuccess' ? t('label.clearSuccess') :
-        searching ? t('label.searching') : '';
+            actionStatus === 'clearSuccess' ? t('label.clearSuccess') :
+                searching ? t('label.searching') : '';
 
     const srAssertiveMsg = userNotFound ? t('label.userNotFound') :
         actionStatus === 'createError' ? t('label.createError') :
-        actionStatus === 'clearError' ? t('label.clearError') :
-        generatedToken ? t('label.generatedToken') :
-        recipientError || '';
+            actionStatus === 'clearError' ? t('label.clearError') :
+                generatedToken ? t('label.generatedToken') :
+                    recipientError || '';
 
     return (
         <div className={styles.st_container}>
@@ -234,10 +270,10 @@ export const SupportTokenAdmin = () => {
                 <div className={styles.st_fieldGroup}>
                     <label className={styles.st_label} htmlFor="st-username">{t('label.username')}</label>
                     <input
+                        required
                         id="st-username"
                         className={styles.st_input}
                         value={username}
-                        required
                         aria-required="true"
                         autoComplete="username"
                         placeholder={t('label.usernamePlaceholder')}
@@ -319,38 +355,33 @@ export const SupportTokenAdmin = () => {
                         </div>
                     )}
 
-                    {/* Existing tokens table */}
+                    {/* Active tokens table */}
                     <div className={styles.st_section}>
                         <h3 id="st-tokens-heading" className={styles.st_sectionTitle}>{t('label.tokensTitle')}</h3>
                         {tokens === null || tokens === undefined ? (
                             <div className={styles.st_loading} role="status" aria-live="polite">
                                 <Loader size="small" aria-hidden="true"/>
                             </div>
-                        ) : tokens.length === 0 ? (
+                        ) : activeTokens.length === 0 ? (
                             <span className={styles.st_emptyMsg}>{t('label.noTokens')}</span>
                         ) : (
-                            <table className={styles.st_table} aria-labelledby="st-tokens-heading">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">{t('label.tokenCreatedDate')}</th>
-                                        <th scope="col">{t('label.tokenRecipient')}</th>
-                                        <th scope="col">{t('label.tokenDescription')}</th>
-                                        <th scope="col">{t('label.tokenExpiration')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tokens.map(token => (
-                                        <tr key={token.createdDate}>
-                                            <td><time dateTime={token.createdDate}>{formatDate(token.createdDate)}</time></td>
-                                            <td>{token.recipient}</td>
-                                            <td>{token.description}</td>
-                                            <td>{token.expiration}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            renderTokenTable(activeTokens, 'st-tokens-heading', t)
                         )}
                     </div>
+
+                    {/* Expired tokens table — only once the token list has loaded */}
+                    {tokens !== null && tokens !== undefined && (
+                        <div className={styles.st_section}>
+                            <h3 id="st-expired-tokens-heading" className={styles.st_sectionTitle}>
+                                {t('label.expiredTokensTitle')}
+                            </h3>
+                            {expiredTokens.length === 0 ? (
+                                <span className={styles.st_emptyMsg}>{t('label.noExpiredTokens')}</span>
+                            ) : (
+                                renderTokenTable(expiredTokens, 'st-expired-tokens-heading', t)
+                            )}
+                        </div>
+                    )}
 
                     {/* Create token form */}
                     <div className={styles.st_section}>
@@ -361,10 +392,10 @@ export const SupportTokenAdmin = () => {
                                     <label className={styles.st_label} htmlFor="st-recipient">{t('label.recipient')}</label>
                                     <input
                                         ref={recipientRef}
+                                        required
                                         id="st-recipient"
                                         type="email"
                                         autoComplete="email"
-                                        required
                                         aria-required="true"
                                         aria-invalid={recipientError ? 'true' : undefined}
                                         aria-describedby={recipientError ? 'st-recipient-error' : undefined}
