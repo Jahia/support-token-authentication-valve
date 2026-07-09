@@ -24,6 +24,8 @@ import org.jahia.pipelines.valves.ValveContext;
 import org.jahia.services.SpringContextSingleton;
 import org.jahia.services.content.JCRNodeIteratorWrapper;
 import org.jahia.services.content.JCRNodeWrapper;
+import org.jahia.services.content.JCRSessionWrapper;
+import org.jahia.services.content.JCRTemplate;
 import org.jahia.services.content.decorator.JCRUserNode;
 import org.jahia.services.observation.JahiaEventService;
 import org.jahia.services.preferences.user.UserPreferencesHelper;
@@ -111,7 +113,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
             return null;
         }
 
-        if (!verifyPassword(user, token)) {
+        if (!verifyPassword(username, site, token)) {
             LOGGER.warn("Login failed: password verification failed for user {}", user.getName());
             request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.BAD_PASSWORD);
             return null;
@@ -170,23 +172,34 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         FrameworkService.sendEvent("org/jahia/usersgroups/login/LOGIN", m, false);
     }
 
-    private boolean verifyPassword(JCRUserNode user, String token) {
+    /**
+     * Verifies the raw token against the user's stored token hashes using a JCR system session.
+     * A system session is required so the token history is readable regardless of the user
+     * node's ACLs — notably the {@code root} user, whose node is not readable by the unprivileged
+     * session backing a login request. This mirrors how the rest of the module (add/list/clear)
+     * accesses token data. Reading with elevated rights is safe here: the caller has already
+     * presented the token, so this only confirms a credential rather than exposing data.
+     */
+    private boolean verifyPassword(String username, String site, String token) {
         try {
-            if (!user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
-                return false;
-            }
-            
-            final JCRNodeIteratorWrapper nodeIterator = user.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
-            while (nodeIterator.hasNext()) {
-                final JCRNodeWrapper node = (JCRNodeWrapper) nodeIterator.next();
-                if (isTokenMatch(node, token) && !isTokenExpired(node)) {
-                    return true;
+            return Boolean.TRUE.equals(JCRTemplate.getInstance().doExecuteWithSystemSession((JCRSessionWrapper session) -> {
+                final JCRUserNode user = userManagerService.lookupUser(username, site, session);
+                if (user == null || !user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
+                    return false;
                 }
-            }
+                final JCRNodeIteratorWrapper nodeIterator = user.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
+                while (nodeIterator.hasNext()) {
+                    final JCRNodeWrapper node = (JCRNodeWrapper) nodeIterator.next();
+                    if (isTokenMatch(node, token) && !isTokenExpired(node)) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
         } catch (RepositoryException ex) {
-            LOGGER.warn("Unable to read tokens for user: {}", user.getName(), ex);
+            LOGGER.warn("Unable to read tokens for user: {}", sanitizeForLog(username), ex);
+            return false;
         }
-        return false;
     }
 
     static String sanitizeForLog(String value) {
