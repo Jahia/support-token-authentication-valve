@@ -356,34 +356,6 @@ export const SupportTokenAdmin = () => {
                         </div>
                     )}
 
-                    {/* Active tokens table */}
-                    <div className={styles.st_section}>
-                        <h3 id="st-tokens-heading" className={styles.st_sectionTitle}>{t('label.tokensTitle')}</h3>
-                        {tokens === null || tokens === undefined ? (
-                            <div className={styles.st_loading} role="status" aria-live="polite">
-                                <Loader size="small" aria-hidden="true"/>
-                            </div>
-                        ) : activeTokens.length === 0 ? (
-                            <span className={styles.st_emptyMsg}>{t('label.noTokens')}</span>
-                        ) : (
-                            renderTokenTable(activeTokens, 'st-tokens-heading', t)
-                        )}
-                    </div>
-
-                    {/* Expired tokens table — only once the token list has loaded */}
-                    {tokens !== null && tokens !== undefined && (
-                        <div className={styles.st_section}>
-                            <h3 id="st-expired-tokens-heading" className={styles.st_sectionTitle}>
-                                {t('label.expiredTokensTitle')}
-                            </h3>
-                            {expiredTokens.length === 0 ? (
-                                <span className={styles.st_emptyMsg}>{t('label.noExpiredTokens')}</span>
-                            ) : (
-                                renderTokenTable(expiredTokens, 'st-expired-tokens-heading', t)
-                            )}
-                        </div>
-                    )}
-
                     {/* Create token form */}
                     <div className={styles.st_section}>
                         <h3 id="st-create-heading" className={styles.st_sectionTitle}>{t('label.createSection')}</h3>
@@ -457,6 +429,34 @@ export const SupportTokenAdmin = () => {
                             </span>
                         </div>
                     </div>
+
+                    {/* Active tokens table */}
+                    <div className={styles.st_section}>
+                        <h3 id="st-tokens-heading" className={styles.st_sectionTitle}>{t('label.tokensTitle')}</h3>
+                        {tokens === null || tokens === undefined ? (
+                            <div className={styles.st_loading} role="status" aria-live="polite">
+                                <Loader size="small" aria-hidden="true"/>
+                            </div>
+                        ) : activeTokens.length === 0 ? (
+                            <span className={styles.st_emptyMsg}>{t('label.noTokens')}</span>
+                        ) : (
+                            renderTokenTable(activeTokens, 'st-tokens-heading', t)
+                        )}
+                    </div>
+
+                    {/* Expired tokens table — only once the token list has loaded */}
+                    {tokens !== null && tokens !== undefined && (
+                        <div className={styles.st_section}>
+                            <h3 id="st-expired-tokens-heading" className={styles.st_sectionTitle}>
+                                {t('label.expiredTokensTitle')}
+                            </h3>
+                            {expiredTokens.length === 0 ? (
+                                <span className={styles.st_emptyMsg}>{t('label.noExpiredTokens')}</span>
+                            ) : (
+                                renderTokenTable(expiredTokens, 'st-expired-tokens-heading', t)
+                            )}
+                        </div>
+                    )}
                 </>
             )}
 
