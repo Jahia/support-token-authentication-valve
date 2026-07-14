@@ -45,6 +45,22 @@ describe('Support Token — login with a generated token', () => {
             body: { username, password: token, doLogin: 'true', restMode: 'true' },
         })
 
+    // Gap G10: identity confirmation. `not.contain 'unauthorized'` only proves the valve did not
+    // refuse — it never proves *which* user the session belongs to. This whoami rides the login
+    // cookie jar (same session cy.request just established) and asks the DXM GraphQL API who the
+    // current user is, so we can positively assert the valve authenticated the intended target and
+    // not some other identity. (Stage-6: confirm the `currentUser { name }` field for this DXM version.)
+    const assertCurrentUserIs = (expectedUsername: string) =>
+        cy
+            .request({
+                method: 'POST',
+                url: '/modules/graphql',
+                failOnStatusCode: false,
+                body: { query: '{ currentUser { name } }' },
+            })
+            .its('body.data.currentUser.name')
+            .should('eq', expectedUsername)
+
     const createTokenFor = (username: string, expiration: number, description: string) => {
         cy.apollo({ mutation: clearTokens, variables: { username, siteKey: null } })
         return cy
@@ -77,17 +93,39 @@ describe('Support Token — login with a generated token', () => {
     it('authenticates the target user with a valid token', () => {
         createTokenFor(LOGIN_USER, 60, 'login happy path').then((token: string) => {
             expect(token, 'generated token').to.be.a('string').and.not.be.empty
-            // A valid token is accepted: the login is not refused.
+            // A valid token is accepted: the login is not refused ...
             tokenLogin(LOGIN_USER, token).its('body').should('not.contain', UNAUTHORIZED_BODY)
+            // ... and (G10) the resulting session identity is exactly the intended target user.
+            assertCurrentUserIs(LOGIN_USER)
         })
     })
 
     // Regression: root's user node is ACL-restricted, so reading its token history requires a
     // system session. A valid token for root must authenticate just like any other user.
+    // CHARACTERIZATION: root impersonation is intended for a support tool; the module currently
+    // places no privilege ceiling on it. Stage-7 decision, not a bug — keep this assertion.
     it('authenticates the root user with a valid token', () => {
         createTokenFor('root', 60, 'root login regression').then((token: string) => {
             expect(token, 'generated token').to.be.a('string').and.not.be.empty
             tokenLogin('root', token).its('body').should('not.contain', UNAUTHORIZED_BODY)
+            // G10: confirm the impersonated identity really is root.
+            assertCurrentUserIs('root')
+        })
+    })
+
+    // Gap G9 (U2 / D7) — CHARACTERIZATION, Stage-7 DESIGN DECISION.
+    // The valve never consumes the token on use (SupportTokenAuthenticationValve
+    // handleSuccessfulLogin never touches the token node), so a single minted token is replayable
+    // until it expires. This pins that current behaviour: the SAME token authenticates twice across
+    // two independent (cookie-cleared) sessions. Docs imply "single-use-style"; a future single-use
+    // implementation would flip the second assertion. Do NOT treat as an assume-bug.
+    it('accepts the same token more than once (token is not single-use)', () => {
+        createTokenFor(LOGIN_USER, 60, 'replay characterization').then((token: string) => {
+            expect(token, 'generated token').to.be.a('string').and.not.be.empty
+            tokenLogin(LOGIN_USER, token).its('body').should('not.contain', UNAUTHORIZED_BODY)
+            cy.clearCookies()
+            // Second, independent session with the very same raw token still succeeds.
+            tokenLogin(LOGIN_USER, token).its('body').should('not.contain', UNAUTHORIZED_BODY)
         })
     })
 
