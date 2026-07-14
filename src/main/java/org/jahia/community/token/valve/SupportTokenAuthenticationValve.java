@@ -210,7 +210,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         return value.replaceAll("\\p{Cntrl}", "_");
     }
     
-    private boolean isTokenMatch(JCRNodeWrapper node, String token) throws RepositoryException {
+    // Package-private for unit testing (see SupportTokenMatchTest); behaviour unchanged.
+    boolean isTokenMatch(JCRNodeWrapper node, String token) throws RepositoryException {
         if (!node.hasProperty(SupportTokenConstants.PROP_TOKEN)) {
             return false;
         }
@@ -218,7 +219,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         return StringUtils.isNotEmpty(token) && PasswordService.getInstance().matches(token, storedToken);
     }
     
-    private boolean isTokenExpired(JCRNodeWrapper node) throws RepositoryException {
+    // Package-private for unit testing (see SupportTokenNodeExpiryTest); behaviour unchanged.
+    boolean isTokenExpired(JCRNodeWrapper node) throws RepositoryException {
         // Fail closed: a token without an expiration property is treated as expired rather
         // than as a token that never expires. An auth valve must not grant a permanent token.
         if (!node.hasProperty(SupportTokenConstants.PROP_EXPIRATION)) {
@@ -250,7 +252,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         }
     }
 
-    private boolean isLoginRequested(HttpServletRequest request) {
+    // Package-private for unit testing (see SupportTokenLoginRequestedTest); behaviour unchanged.
+    boolean isLoginRequested(HttpServletRequest request) {
         String doLogin = request.getParameter(LoginEngineAuthValveImpl.LOGIN_TAG_PARAMETER);
         if (doLogin != null) {
             return Boolean.parseBoolean(doLogin) || "1".equals(doLogin);
