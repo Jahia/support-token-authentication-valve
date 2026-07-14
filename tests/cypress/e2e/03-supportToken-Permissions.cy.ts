@@ -119,12 +119,12 @@ describe('Support Token — permission enforcement', () => {
         })
     })
 
-    // Gap G3b / D5: the site-settings admin route (register.jsx `administration-sites:10`) gates on
-    // `siteAdminUsers`, but every GraphQL operation gates on `supportTokenAdmin`. A siteAdminUsers
-    // holder can therefore reach the UI route yet be refused by the backend — an inconsistent split.
-    // This pins the backend half of that mismatch (deterministic); the UI-route-reachability half is
-    // a Stage-6 assertion requiring site navigation context. Stage-7 candidate: align the route
-    // permission to supportTokenAdmin, or document the split intentionally.
+    // D5 (RESOLVED in Stage 7): the site-settings admin route (register.jsx `administration-sites:10`)
+    // previously gated on `siteAdminUsers` while every GraphQL op gates on `supportTokenAdmin`, so a
+    // `siteAdminUsers` holder could reach the UI route yet be refused by the backend. The UI route is
+    // now aligned to `supportTokenAdmin`. This test remains a regression guard on the *backend* half:
+    // a `siteAdminUsers`-only holder must still be refused by every GraphQL operation (the backend
+    // authority is `supportTokenAdmin`, never `siteAdminUsers`).
     describe('siteAdminUsers / supportTokenAdmin gate mismatch (D5)', () => {
         it('denies every GraphQL op to a siteAdminUsers-only holder', () => {
             asUser(SITE_ADMIN_USER)

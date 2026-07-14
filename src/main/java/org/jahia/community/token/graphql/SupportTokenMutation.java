@@ -8,6 +8,8 @@ import org.jahia.modules.graphql.provider.dxm.security.GraphQLRequiresPermission
 import org.jahia.modules.graphql.provider.dxm.util.ContextUtil;
 import org.jahia.community.token.SupportTokenConstants;
 import org.jahia.community.token.SupportTokenUtils;
+import org.jahia.services.content.JCRSessionFactory;
+import org.jahia.services.usermanager.JahiaUser;
 import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,9 @@ public class SupportTokenMutation {
             LOGGER.warn("supportTokenCreate: username and recipient are required");
             return null;
         }
+        // AUDIT: record WHO is minting the token. The minter is the authenticated GraphQL caller,
+        // taken from the current JCR session (trusted identity, not a request-supplied string).
+        LOGGER.info("[AUDIT] support-token create requested by minter='{}'", currentMinterName());
         final String token = SupportTokenUtils.generateRandomToken();
         try {
             final boolean ok = SupportTokenUtils.addToken(
@@ -88,6 +93,16 @@ public class SupportTokenMutation {
      * auth valve.  Token-authenticated sessions must not be allowed to mint or clear tokens
      * (privilege escalation / persistence prevention).
      */
+    /**
+     * Resolves the identity of the currently authenticated GraphQL caller (the token "minter")
+     * from the current JCR session for audit logging. Returns {@code "unknown"} when no user is
+     * bound to the session rather than throwing.
+     */
+    private static String currentMinterName() {
+        final JahiaUser current = JCRSessionFactory.getInstance().getCurrentUser();
+        return current != null ? current.getName() : "unknown";
+    }
+
     @SuppressWarnings("java:S1874") // DXM ContextUtil consumes the legacy DataFetchingEnvironment context; no non-deprecated overload is available in this DXM version.
     private static boolean isTokenAuthenticatedSession(DataFetchingEnvironment environment) {
         final HttpServletRequest request = ContextUtil.getHttpServletRequest(environment.getContext());

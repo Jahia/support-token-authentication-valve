@@ -91,6 +91,11 @@ public final class SupportTokenUtils {
             tokenNode.setProperty(SupportTokenConstants.PROP_RECIPIENT, recipient);
             try {
                 session.save();
+                // AUDIT: record the TARGET the token was minted for. jahiaUser.getUserKey() is a
+                // resolved, trusted identifier (no raw request string), and expiration is numeric,
+                // so this audit line cannot be used for log injection.
+                LOGGER.info("[AUDIT] support-token minted for target user='{}' expiration={} min",
+                        jahiaUser.getUserKey(), expiration);
                 final MailService mailService = MailService.getInstance();
                 if (mailService.isEnabled()) {
 

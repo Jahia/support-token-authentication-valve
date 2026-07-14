@@ -53,7 +53,10 @@ describe('Support Token — token-authed session is contained', () => {
             method: 'POST',
             url: '/modules/graphql',
             failOnStatusCode: false,
-            headers: { 'Content-Type': 'application/json' },
+            // Jahia's GraphQL SecurityFilter (CSRF) rejects requests lacking a same-origin `Origin`
+            // header with GqlAccessDeniedException. A raw `cy.request` — unlike `cy.apollo` — does not
+            // set it, so send it explicitly; the call must ride the token-authed session cookie.
+            headers: { 'Content-Type': 'application/json', Origin: Cypress.config('baseUrl') as string },
             body: { query, variables },
         })
 

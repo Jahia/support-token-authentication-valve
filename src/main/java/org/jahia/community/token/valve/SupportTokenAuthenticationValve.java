@@ -131,6 +131,12 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
     private void handleSuccessfulLogin(AuthValveContext authContext, HttpServletRequest request, JCRUserNode user) {
         LOGGER.debug("User {} logged in.", user);
 
+        // AUDIT: a support-token login is an impersonation event and must be distinguishable in the
+        // logs from an ordinary password login. user.getName() comes from the resolved JCR node
+        // (trusted), and is additionally run through sanitizeForLog as a defence-in-depth measure.
+        LOGGER.info("[AUDIT] support-token login: session established for user='{}' via support-token valve"
+                + " (impersonation login, NOT a password login)", sanitizeForLog(user.getName()));
+
         JahiaUser jahiaUser = user.getJahiaUser();
 
         invalidateExistingSession(request);

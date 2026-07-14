@@ -4,7 +4,7 @@ Jahia OSGi module that manages temporary support tokens: a support engineer crea
 
 ## Key Facts
 
-- **artifactId**: `support-token-authentication-valve` | **version**: `3.0.1-SNAPSHOT`
+- **artifactId**: `support-token-authentication-valve` | **version**: `3.1.2-SNAPSHOT` (Maven `pom.xml` — the source of truth). Note: `package.json` still reads `2.0.8-SNAPSHOT`; this front-end/back-end version drift is cosmetic (the OSGi bundle version comes from the pom) but should be reconciled.
 - **groupId**: `org.jahia.community`
 - **Java package**: `org.jahia.community.token`
 - **jahia-depends**: `default,graphql-dxm-provider`
@@ -53,17 +53,29 @@ The raw token is **never** stored. Only its bcrypt hash (via `PasswordService`) 
 5. If valid: sets the current user, fires `LoginEvent` + OSGi `org/jahia/usersgroups/login/LOGIN` event, returns (does not fall through to next valve).
 6. On any failure: sets the appropriate `VALVE_RESULT` attribute and calls `invokeNext`.
 
-There is no longer a `main.jsp` or `supportTokenAuthKey` session attribute — access control for the admin UI is handled entirely by the React `adminRoute` registry entries via `requiredPermission` (`adminUsers` / `siteAdminUsers`).
+There is no longer a `main.jsp`. Access control for the admin UI is handled by the React `adminRoute` registry entries via `requiredPermission`; both routes now gate on `supportTokenAdmin` (D5 — aligned with the GraphQL resolver permission).
+
+**Session containment IS present** (correcting an earlier stale note that claimed the session block was removed). On a successful token login the valve sets the HTTP session attribute `supportTokenAuth=true` (`SupportTokenConstants.SESSION_SUPPORT_TOKEN_AUTH`). Every GraphQL resolver checks this via `isTokenAuthenticatedSession(...)` and refuses service to a token-authenticated caller — `listTokens` ⇒ empty list, `create` ⇒ `null`, `clearAll` ⇒ `false` — so an impersonated session cannot pivot to mint, enumerate, or wipe tokens even if the impersonated user holds `supportTokenAdmin`.
+
+**Audit logging (U18).** The module emits `[AUDIT]`-prefixed `INFO` log lines at three points so impersonation activity is traceable: the token **minter** identity when `supportToken.create` is invoked, the **target** user when a token is actually minted (`SupportTokenUtils.addToken`), and a distinct line tagging each successful token **login** in the valve (so it is distinguishable from an ordinary password login).
 
 ## GraphQL API
 
-All operations require `admin` permission (via `@GraphQLRequiresPermission("admin")`).
+All operations require the `supportTokenAdmin` permission (via `@GraphQLRequiresPermission("supportTokenAdmin")`) — **not** the generic `admin` permission. In addition, every resolver refuses callers whose HTTP session was established by the support-token valve (see "Session containment" below).
+
+**The operations are namespaced**, not flat root fields. `Query` and `Mutation` each expose a single `supportToken` field (see `SupportTokenQueryExtension` / `SupportTokenMutationExtension`) that returns the `SupportTokenQuery` / `SupportTokenMutation` container; the actual operations are nested under it:
+
+```graphql
+query    { supportToken { listTokens(username: "...", siteKey: "...") { createdDate recipient expiration description } } }
+mutation { supportToken { create(username: "...", recipient: "...", expiration: 60) } }
+mutation { supportToken { clearAll(username: "...") } }
+```
 
 ### Queries
 
 | Name | Parameters | Returns | Notes |
 |------|-----------|---------|-------|
-| `supportTokenListTokens` | `username: String!`, `siteKey: String` | `[SupportTokenInfo]` | Returns `null` if user not found; empty list if no tokens |
+| `supportToken.listTokens` | `username: String!`, `siteKey: String` | `[SupportTokenInfo]` | Returns `null` if user not found; empty list if no tokens. Returns empty list for a token-authed session. |
 
 `SupportTokenInfo` fields: `createdDate` (ISO string), `recipient`, `expiration` (Long, minutes), `description`.
 
@@ -71,8 +83,8 @@ All operations require `admin` permission (via `@GraphQLRequiresPermission("admi
 
 | Name | Parameters | Returns | Notes |
 |------|-----------|---------|-------|
-| `supportTokenCreate` | `username: String!`, `siteKey: String`, `recipient: String!`, `description: String`, `expiration: Long` | `String` | Raw token (UUID); `null` on failure or missing required params. Sends email via `MailService` if configured. Default expiration: 60 min. |
-| `supportTokenClearAll` | `username: String!`, `siteKey: String` | `Boolean` | Removes the entire `tokenHistory` node |
+| `supportToken.create` | `username: String!`, `siteKey: String`, `recipient: String!`, `description: String`, `expiration: Long` | `String` | Raw token (UUID); `null` on failure, missing required params, or a token-authed session. Sends email via `MailService` if configured. Default expiration: 60 min. |
+| `supportToken.clearAll` | `username: String!`, `siteKey: String` | `Boolean` | Removes the entire `tokenHistory` node; `false` for a token-authed session |
 
 ## React Admin UI
 
@@ -95,8 +107,17 @@ All operations require `admin` permission (via `@GraphQLRequiresPermission("admi
 
 | File | Scope |
 |------|-------|
-| `01-supportTokenAPI.cy.ts` | GraphQL API shape, field types, create/list/clear round-trips, email verification |
+| `01-supportTokenAPI.cy.ts` | GraphQL API shape, field types, create/list/clear round-trips, email verification (namespaced `supportToken.*` ops) |
 | `02-supportTokenUI.cy.ts` | Admin UI page structure, search, token creation, clear flow, email verification |
+| `03-supportToken-Permissions.cy.ts` | `supportTokenAdmin` permission gate on the GraphQL operations |
+| `04-supportTokenLogin.cy.ts` | End-to-end token login via `/cms/login`, incl. the **root-login regression** and identity whoami (`currentUser { name }`); negative fail-closed cases; **U2 replay characterization** |
+| `05-supportTokenSessionContainment.cy.ts` | Token-authed session is contained: list⇒`[]`, create⇒`null`, clearAll⇒`false` even when the impersonated user holds `supportTokenAdmin` |
+
+### Characterization notes (pinned, not fixed — maintainer decision)
+
+- **U2 token replay** — a minted token is reusable until expiry (the valve never consumes it on use). Docs imply single-use; `04` pins the current replayable behaviour. Flip that assertion if single-use is ever implemented.
+- **Root impersonation** — a valid token for `root` authenticates via the system session by design (root's node is ACL-restricted). No privilege ceiling is placed on the target. Kept as a regression, not treated as a bug.
+- **U3 no rate-limiting** — LOW severity; tokens are 122-bit random UUIDs, so brute force is impractical.
 
 CSS Module selectors use `[class*="st_..."]` pattern. Uses **mailpit** (`cypress-mailpit`) for email verification testing.
 
