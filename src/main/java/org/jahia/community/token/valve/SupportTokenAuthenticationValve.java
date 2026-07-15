@@ -131,6 +131,12 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
     private void handleSuccessfulLogin(AuthValveContext authContext, HttpServletRequest request, JCRUserNode user) {
         LOGGER.debug("User {} logged in.", user);
 
+        // AUDIT: a support-token login is an impersonation event and must be distinguishable in the
+        // logs from an ordinary password login. user.getName() comes from the resolved JCR node
+        // (trusted), and is additionally run through sanitizeForLog as a defence-in-depth measure.
+        LOGGER.info("[AUDIT] support-token login: session established for user='{}' via support-token valve"
+                + " (impersonation login, NOT a password login)", sanitizeForLog(user.getName()));
+
         JahiaUser jahiaUser = user.getJahiaUser();
 
         invalidateExistingSession(request);
@@ -210,7 +216,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         return value.replaceAll("\\p{Cntrl}", "_");
     }
     
-    private boolean isTokenMatch(JCRNodeWrapper node, String token) throws RepositoryException {
+    // Package-private for unit testing (see SupportTokenMatchTest); behaviour unchanged.
+    boolean isTokenMatch(JCRNodeWrapper node, String token) throws RepositoryException {
         if (!node.hasProperty(SupportTokenConstants.PROP_TOKEN)) {
             return false;
         }
@@ -218,7 +225,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         return StringUtils.isNotEmpty(token) && PasswordService.getInstance().matches(token, storedToken);
     }
     
-    private boolean isTokenExpired(JCRNodeWrapper node) throws RepositoryException {
+    // Package-private for unit testing (see SupportTokenNodeExpiryTest); behaviour unchanged.
+    boolean isTokenExpired(JCRNodeWrapper node) throws RepositoryException {
         // Fail closed: a token without an expiration property is treated as expired rather
         // than as a token that never expires. An auth valve must not grant a permanent token.
         if (!node.hasProperty(SupportTokenConstants.PROP_EXPIRATION)) {
@@ -250,7 +258,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         }
     }
 
-    private boolean isLoginRequested(HttpServletRequest request) {
+    // Package-private for unit testing (see SupportTokenLoginRequestedTest); behaviour unchanged.
+    boolean isLoginRequested(HttpServletRequest request) {
         String doLogin = request.getParameter(LoginEngineAuthValveImpl.LOGIN_TAG_PARAMETER);
         if (doLogin != null) {
             return Boolean.parseBoolean(doLogin) || "1".equals(doLogin);

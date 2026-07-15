@@ -11,6 +11,11 @@ import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Karaf shell command {@code support-token:clear}. Ungated by design — see the trust-boundary
+ * note on {@link CreateCommand} (U14 / gap G1): the Karaf shell is a trusted server-administrator
+ * surface with no per-caller Jahia identity to authorize against.
+ */
 @Command(scope = "support-token", name = "clear", description = "Clear all tokens of a user")
 @Service
 public class ClearCommand implements Action {

@@ -12,6 +12,24 @@ import org.jahia.services.usermanager.JahiaUserManagerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Karaf shell command {@code support-token:create}.
+ *
+ * <p><b>Trust boundary (U14 / gap G1).</b> This command performs <em>no</em> Jahia permission
+ * check: it mints an impersonation token for any user, including {@code root}. Unlike the GraphQL
+ * and React surfaces — which enforce {@code supportTokenAdmin} and additionally refuse
+ * token-authenticated sessions — the Karaf shell runs with the system identity and exposes no
+ * per-caller Jahia identity to authorize against. Access to the Karaf shell (SSH / local console)
+ * is itself the security control, so the shell is treated as a trusted server-administrator surface,
+ * consistent with other Jahia admin modules (e.g. versions-cleaner, workflow-tasks) that expose
+ * privileged shell commands without an in-command permission gate.
+ *
+ * <p><b>Residual risk:</b> anyone with Karaf shell access can impersonate any user. This is
+ * accepted and documented rather than fixed, because no caller identity is available in-process to
+ * enforce {@code supportTokenAdmin} here. The asymmetry is pinned by
+ * {@code SupportTokenCommandGateTest}; if a future Jahia version surfaces the shell caller's
+ * identity, add a {@code supportTokenAdmin} check here to close the gap.
+ */
 @Command(scope = "support-token", name = "create", description = "Create a token for a user")
 @Service
 public class CreateCommand implements Action {
