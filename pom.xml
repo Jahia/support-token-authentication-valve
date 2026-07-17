@@ -25,6 +25,7 @@
         <jahia-depends>default,graphql-dxm-provider</jahia-depends>
         <jahia-deploy-on-site>all</jahia-deploy-on-site>
         <jahia-module-type>system</jahia-module-type>
+        <jahia.plugin.version>6.13</jahia.plugin.version>
     </properties>
 
     <repositories>

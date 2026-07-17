@@ -83,14 +83,14 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         final HttpServletRequest httpServletRequest = authContext.getRequest();
 
         JCRUserNode user = tryAuthenticate(httpServletRequest);
-        
+
         if (user != null) {
             handleSuccessfulLogin(authContext, httpServletRequest, user);
         } else {
             valveContext.invokeNext(context);
         }
     }
-    
+
     private JCRUserNode tryAuthenticate(HttpServletRequest request) {
         if (!isLoginRequested(request)) {
             return null;
@@ -140,20 +140,20 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         JahiaUser jahiaUser = user.getJahiaUser();
 
         invalidateExistingSession(request);
-        
+
         request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.OK);
         authContext.getSessionFactory().setCurrentUser(jahiaUser);
 
         setUserLocale(request, user);
         publishLoginEvents(jahiaUser, authContext);
     }
-    
+
     private void invalidateExistingSession(HttpServletRequest request) {
         if (request.getSession(false) != null) {
             request.getSession().invalidate();
         }
     }
-    
+
     private void setUserLocale(HttpServletRequest request, JCRUserNode user) {
         Locale preferredLocale = UserPreferencesHelper.getPreferredLocale(user,
                 LanguageCodeConverters.resolveLocaleForGuest(request));
@@ -165,7 +165,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         // token-management operations can refuse service to token-authed callers.
         request.getSession().setAttribute(SupportTokenConstants.SESSION_SUPPORT_TOKEN_AUTH, Boolean.TRUE);
     }
-    
+
     private void publishLoginEvents(JahiaUser jahiaUser, AuthValveContext authContext) {
         LoginEvent event = new LoginEvent(this, jahiaUser, authContext);
         SpringContextSingleton.getInstance().publishEvent(event);
@@ -188,8 +188,8 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
      */
     private boolean verifyPassword(String username, String site, String token) {
         try {
-            return Boolean.TRUE.equals(JCRTemplate.getInstance().doExecuteWithSystemSession((JCRSessionWrapper session) -> {
-                final JCRUserNode user = userManagerService.lookupUser(username, site, session);
+            return Boolean.TRUE.equals(JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(userManagerService.lookupUser(username, site).getJahiaUser(), Constants.EDIT_WORKSPACE,null,(JCRSessionWrapper session) -> {
+                final JCRUserNode user = userManagerService.lookupUserByPath(session.getUser().getLocalPath(), session);
                 if (user == null || !user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
                     return false;
                 }
@@ -215,7 +215,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         // Strip all ISO control characters (CR, LF, TAB, etc.) to prevent log injection.
         return value.replaceAll("\\p{Cntrl}", "_");
     }
-    
+
     // Package-private for unit testing (see SupportTokenMatchTest); behaviour unchanged.
     boolean isTokenMatch(JCRNodeWrapper node, String token) throws RepositoryException {
         if (!node.hasProperty(SupportTokenConstants.PROP_TOKEN)) {
@@ -224,7 +224,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
         String storedToken = node.getProperty(SupportTokenConstants.PROP_TOKEN).getString();
         return StringUtils.isNotEmpty(token) && PasswordService.getInstance().matches(token, storedToken);
     }
-    
+
     // Package-private for unit testing (see SupportTokenNodeExpiryTest); behaviour unchanged.
     boolean isTokenExpired(JCRNodeWrapper node) throws RepositoryException {
         // Fail closed: a token without an expiration property is treated as expired rather
