@@ -113,7 +113,7 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
             return null;
         }
 
-        if (!verifyPassword(username, site, token)) {
+        if (!verifyPassword(user, token)) {
             LOGGER.warn("Login failed: password verification failed for user {}", user.getName());
             request.setAttribute(LoginEngineAuthValveImpl.VALVE_RESULT, LoginEngineAuthValveImpl.BAD_PASSWORD);
             return null;
@@ -183,14 +183,18 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
      * A system session is required so the token history is readable regardless of the user
      * node's ACLs — notably the {@code root} user, whose node is not readable by the unprivileged
      * session backing a login request. This mirrors how the rest of the module (add/list/clear)
-     * accesses token data. Reading with elevated rights is safe here: the caller has already
-     * presented the token, so this only confirms a credential rather than exposing data.
+     * accesses token data. The exact path of the user already resolved by the login pipeline is
+     * reused so a site-scoped second lookup cannot select a different user or miss a global LDAP
+     * user. Reading with elevated rights is safe here: the caller has already presented the token,
+     * so this only confirms a credential rather than exposing data.
      */
-    private boolean verifyPassword(String username, String site, String token) {
+    private boolean verifyPassword(JCRUserNode resolvedUser, String token) {
         try {
-            return Boolean.TRUE.equals(JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(userManagerService.lookupUser(username, site).getJahiaUser(), Constants.EDIT_WORKSPACE,null,(JCRSessionWrapper session) -> {
-                final JCRUserNode user = userManagerService.lookupUserByPath(session.getUser().getLocalPath(), session);
-                if (user == null || !user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
+            final String userPath = resolvedUser.getPath();
+            return Boolean.TRUE.equals(JCRTemplate.getInstance().doExecuteWithSystemSessionAsUser(
+                    resolvedUser.getJahiaUser(), Constants.EDIT_WORKSPACE, null, (JCRSessionWrapper session) -> {
+                final JCRNodeWrapper user = resolveTokenOwner(session, userPath);
+                if (!user.hasNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY)) {
                     return false;
                 }
                 final JCRNodeIteratorWrapper nodeIterator = user.getNode(SupportTokenConstants.NODE_NAME_TOKEN_HISTORY).getNodes();
@@ -203,9 +207,13 @@ public final class SupportTokenAuthenticationValve extends BaseAuthValve {
                 return false;
             }));
         } catch (RepositoryException ex) {
-            LOGGER.warn("Unable to read tokens for user: {}", sanitizeForLog(username), ex);
+            LOGGER.warn("Unable to read tokens for user: {}", sanitizeForLog(resolvedUser.getName()), ex);
             return false;
         }
+    }
+
+    static JCRNodeWrapper resolveTokenOwner(JCRSessionWrapper session, String userPath) throws RepositoryException {
+        return session.getNode(userPath);
     }
 
     static String sanitizeForLog(String value) {
