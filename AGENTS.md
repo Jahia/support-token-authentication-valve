@@ -130,7 +130,7 @@ yarn build:production   # webpack production build
 yarn lint               # ESLint on src/javascript
 ```
 
-- Node: `v22.6.0` | Yarn: `v1.22.21` (installed by `frontend-maven-plugin`; `.yarnrc.yml` sets `nodeLinker: node-modules`)
+- Node: `v22.20.0` | Yarn: `v1.22.21` (installed by `frontend-maven-plugin`; `.yarnrc.yml` sets `nodeLinker: node-modules`)
 - Output bundle: `src/main/resources/javascript/apps/support-token-authentication-valve.bundle.js`
 - **Lint config**: `.eslintrc.json` (extends `@jahia`), `babel.config.js` (preset-react + preset-env)
 
