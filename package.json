@@ -46,7 +46,9 @@
     "immutable": "^5.1.9",
     "postcss": "^8.5.25",
     "postcss-selector-parser": "^7.1.6",
-    "source-map-js": "^1.2.2"
+    "source-map-js": "^1.2.2",
+    "**/cacache/glob": "^14.0.3",
+    "**/@typescript-eslint/typescript-estree/minimatch": "^11.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
@@ -65,7 +67,7 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "file-loader": "^6.2.0",
-    "rimraf": "^5.0.0",
+    "rimraf": "^6.1.4",
     "sass": "^1.52.1",
     "sass-loader": "^12.4.0",
     "style-loader": "^3.3.1",
