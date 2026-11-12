@@ -80,6 +80,16 @@
     "follow-redirects": "^1.16.1",
     "**/nyc/glob": "^14.0.3",
     "**/nyc/test-exclude/glob": "^14.0.3",
-    "**/nyc/test-exclude/minimatch": "^11.0.1"
+    "**/nyc/test-exclude/minimatch": "^11.0.1",
+    "test-exclude": "^8.0.0",
+    "test-exclude/glob": "^14.0.3",
+    "**/test-exclude/glob": "^14.0.3",
+    "test-exclude/minimatch": "^11.0.5",
+    "**/test-exclude/minimatch": "^11.0.5",
+    "mochawesome-merge/glob": "^14.0.3",
+    "**/mochawesome-merge/glob": "^14.0.3",
+    "@typescript-eslint/typescript-estree/minimatch": "^11.0.5",
+    "**/@typescript-eslint/typescript-estree/minimatch": "^11.0.5",
+    "uuid": "^11.1.1"
   }
 }
